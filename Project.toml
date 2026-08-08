@@ -2,7 +2,7 @@ name = "AIMORALayout"
 uuid = "6f047e7d-bf2a-40ac-a20c-c55cfda68ba0"
 version = "0.1.0"
 authors = ["Ahmed Elkholy <ahmed_elkholy@f-eng.tanta.edu.eg>"]
-license = "MIT"
+license = "PolyForm-Noncommercial-1.0.0"
 
 [compat]
 julia = "1.10"
