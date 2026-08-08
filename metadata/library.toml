@@ -1,6 +1,6 @@
 schema = "aimora-symbol-library-v1"
 library_id = "aimora-public-symbols"
 version = "0.1.0"
-licence = "MIT"
+licence = "PolyForm-Noncommercial-1.0.0"
 semantic_port_metadata_required = true
 artwork_provenance_required = true
