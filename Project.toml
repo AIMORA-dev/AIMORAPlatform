@@ -2,7 +2,7 @@ name = "AIMORAVisuals"
 uuid = "60d64674-9081-4077-878f-44c1107ce075"
 version = "0.1.0"
 authors = ["Ahmed Elkholy <ahmed_elkholy@f-eng.tanta.edu.eg>"]
-license = "MIT"
+license = "PolyForm-Noncommercial-1.0.0"
 
 [compat]
 julia = "1.10"
