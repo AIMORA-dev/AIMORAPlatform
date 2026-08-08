@@ -4,4 +4,4 @@
 
 ## Licence
 
-This Layer-B community-source package is available under the PolyForm Noncommercial License 1.0.0. Commercial use requires a separate paid AIMORA agreement; the software has no licence key, activation, telemetry, or technical feature lock.
+This repository's AIMORA-authored content is distributed under the PolyForm Noncommercial License 1.0.0. Research, education, personal study, public-interest noncommercial use, and other purposes permitted by that licence are free; commercial use requires a separate written agreement with Ahmed Elkholy <ahmed_elkholy@f-eng.tanta.edu.eg>. There is no licence key, activation, telemetry, or technical feature restriction. Clearly identified third-party material retains its own terms, and copies received under an earlier licence retain those prior grants.
