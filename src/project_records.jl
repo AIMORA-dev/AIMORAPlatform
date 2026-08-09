@@ -126,6 +126,7 @@ struct CanonicalProject
     registry::SemanticSchemaRegistry
     units::UnitRegistry
     records::CanonicalList{CanonicalRecord}
+    graphs::SemanticGraphs
     verification::ProjectVerificationState
 
     function CanonicalProject(
@@ -133,21 +134,31 @@ struct CanonicalProject
         registry::SemanticSchemaRegistry,
         units::UnitRegistry,
         records::AbstractVector{CanonicalRecord},
+        graphs::SemanticGraphs,
         verification::ProjectVerificationState,
     )
         copied = sort!(collect(records); by = record -> record.identity.id.value)
         ids = getfield.(getfield.(copied, :identity), :id)
         length(ids) == length(unique(ids)) ||
             _semantic_fail(:duplicate_record_id, "canonical project repeats a record ID")
-        return new(metadata, registry, units, CanonicalList{CanonicalRecord}(copied), verification)
+        return new(metadata, registry, units, CanonicalList{CanonicalRecord}(copied), graphs, verification)
     end
 end
+
+CanonicalProject(
+    metadata::ProjectMetadata,
+    registry::SemanticSchemaRegistry,
+    units::UnitRegistry,
+    records::AbstractVector{CanonicalRecord},
+    verification::ProjectVerificationState,
+) = CanonicalProject(metadata, registry, units, records, SemanticGraphs(), verification)
 
 Base.:(==)(left::CanonicalProject, right::CanonicalProject) =
     left.metadata == right.metadata &&
     left.registry == right.registry &&
     left.units == right.units &&
     left.records == right.records &&
+    left.graphs == right.graphs &&
     left.verification == right.verification
 
 function _validate_record(project::CanonicalProject, record::CanonicalRecord)
@@ -175,6 +186,7 @@ function validate_project(project::CanonicalProject)
     for record in project.records
         _validate_record(project, record)
     end
+    validate_graphs(project)
     return true
 end
 
@@ -187,6 +199,7 @@ function verified_project(project::CanonicalProject)
         project.registry,
         project.units,
         collect(project.records),
+        project.graphs,
         ProjectVerified,
     )
 end
@@ -197,15 +210,17 @@ unsafe_project(
     registry::SemanticSchemaRegistry,
     units::UnitRegistry,
     records::AbstractVector{CanonicalRecord},
-) = CanonicalProject(metadata, registry, units, records, ProjectUnverified)
+    graphs::SemanticGraphs = SemanticGraphs(),
+) = CanonicalProject(metadata, registry, units, records, graphs, ProjectUnverified)
 
 function CanonicalProject(
     metadata::ProjectMetadata,
     registry::SemanticSchemaRegistry,
     units::UnitRegistry,
     records::AbstractVector{CanonicalRecord},
+    graphs::SemanticGraphs = SemanticGraphs(),
 )
-    return verified_project(unsafe_project(metadata, registry, units, records))
+    return verified_project(unsafe_project(metadata, registry, units, records, graphs))
 end
 
 function project_record(project::CanonicalProject, id::ProjectId)
@@ -219,9 +234,20 @@ function _replace_project_record(project::CanonicalProject, replacement::Canonic
     index = findfirst(record -> record.identity.id == replacement.identity.id, records)
     isnothing(index) && _semantic_fail(:unknown_record_id, "canonical project record does not exist")
     records[index] = replacement
-    return CanonicalProject(project.metadata, project.registry, project.units, records, ProjectUnverified)
+    return CanonicalProject(project.metadata, project.registry, project.units, records, project.graphs, ProjectUnverified)
 end
 
 function _replace_project_metadata(project::CanonicalProject, metadata::ProjectMetadata)
-    return CanonicalProject(metadata, project.registry, project.units, collect(project.records), ProjectUnverified)
+    return CanonicalProject(metadata, project.registry, project.units, collect(project.records), project.graphs, ProjectUnverified)
+end
+
+function _replace_project_graphs(project::CanonicalProject, graphs::SemanticGraphs)
+    return CanonicalProject(
+        project.metadata,
+        project.registry,
+        project.units,
+        collect(project.records),
+        graphs,
+        ProjectUnverified,
+    )
 end

@@ -137,7 +137,14 @@ function _apply_patch(project::CanonicalProject, patch::AddRecordPatch)
         _semantic_fail(:duplicate_record_id, "add-record patch targets an existing ID")
     _validate_record(project, patch.record)
     records = vcat(collect(project.records), [patch.record])
-    updated = CanonicalProject(project.metadata, project.registry, project.units, records, ProjectUnverified)
+    updated = CanonicalProject(
+        project.metadata,
+        project.registry,
+        project.units,
+        records,
+        project.graphs,
+        ProjectUnverified,
+    )
     return updated, _record_effect(patch.record.identity.id)
 end
 
@@ -146,7 +153,14 @@ function _apply_patch(project::CanonicalProject, patch::RemoveRecordPatch)
     index = findfirst(record -> record.identity.id == patch.owner, records)
     isnothing(index) && _semantic_fail(:unknown_record_id, "remove-record patch target does not exist")
     deleteat!(records, index)
-    updated = CanonicalProject(project.metadata, project.registry, project.units, records, ProjectUnverified)
+    updated = CanonicalProject(
+        project.metadata,
+        project.registry,
+        project.units,
+        records,
+        project.graphs,
+        ProjectUnverified,
+    )
     return updated, _record_effect(patch.owner)
 end
 
@@ -199,7 +213,13 @@ end
 function _apply_patch(project::CanonicalProject, patch::UnsafeReplaceRecordsPatch)
     collect(project.records) == collect(patch.records) &&
         _semantic_fail(:no_effect_command, "unsafe replacement does not change project records")
-    updated = unsafe_project(project.metadata, project.registry, project.units, collect(patch.records))
+    updated = unsafe_project(
+        project.metadata,
+        project.registry,
+        project.units,
+        collect(patch.records),
+        project.graphs,
+    )
     owner = project.metadata.identity.id
     effect = CommandEffect(owner, DependencyInvalidation(owner, [InvalidateAllResults, InvalidateViews]))
     return updated, effect
@@ -331,7 +351,10 @@ function _revision_digest(
 end
 
 function _declared_command_effect(project::CanonicalProject, command::ProjectCommand)
-    patch = command.patch
+    return _declared_patch_effect(project, command.patch)
+end
+
+function _declared_patch_effect(project::CanonicalProject, patch::ProjectPatch)
     if patch isa AddRecordPatch
         return _record_effect(patch.record.identity.id)
     elseif patch isa RemoveRecordPatch

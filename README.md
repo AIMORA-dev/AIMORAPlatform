@@ -4,7 +4,7 @@
 
 The current semantic layer provides immutable project/global IDs, namespaces, typed local/external references and JSON Pointer paths, exact decimal/rational quantities, controlled unit/base/orientation conversion, provenance, licences, uncertainty, checksummed artifact identities, and a versioned callback-free semantic schema registry. Canonical physical values require provenance, quantity schemas require explicit dimensions and orientations, per-unit values require typed base references, schema and namespace collisions reject deterministically, and no schema field stores an arbitrary Julia value or hidden physical default. Immutable projects and revisions add typed ordered commands, validated transactions, rollback, deterministic replay, undo where defined, exact changed-owner and dependency-invalidation signals, explicit unverified developer construction, and revision-pinned query snapshots.
 
-Run `julia --project=. examples/canonical_primitives.jl` for the primitive construction example or `julia --project=. examples/transactional_project.jl` for a complete revision and transaction example.
+Run `julia --project=. examples/canonical_primitives.jl` for primitive construction, `julia --project=. examples/transactional_project.jl` for revisions and transactions, or `julia --project=. examples/semantic_graphs.jl` for typed physical topology built through commands.
 
 ## Licence
 

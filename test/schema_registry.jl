@@ -239,6 +239,22 @@ end
         ProjectRevision,
         RevisionConflict,
         ProjectSnapshot,
+        GraphDomainIdentity,
+        CarrierIdentity,
+        SignalContract,
+        GraphNode,
+        SemanticPort,
+        CarrierMapping,
+        PhysicalConnection,
+        SignalConnection,
+        WorkflowDependency,
+        CrossGraphReference,
+        ViewProjection,
+        SemanticGraphs,
+        AddGraphElementPatch,
+        RemoveGraphElementPatch,
+        ConnectGraphPatch,
+        DisconnectGraphPatch,
     ]
     for canonical_type in canonical_types
         @test all(field_type -> field_type != Any, fieldtypes(canonical_type))
