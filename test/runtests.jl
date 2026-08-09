@@ -1,6 +1,7 @@
 using Test
 using AIMORAFormats
 using SHA
+using UUIDs
 
 @testset "open-text format package boundary" begin
     @test nameof(AIMORAFormats) === :AIMORAFormats
@@ -655,4 +656,378 @@ end
     invalid_serialization = serialize_canonical_json(invalid_node)
     @test !format_succeeded(invalid_serialization)
     @test only(invalid_serialization.diagnostics).code == :invalid_unicode_value
+end
+
+function test_lock_entry_section(
+    id::String;
+    family::String = "schema",
+    uuid::Union{Nothing,String} = nothing,
+    trust::String = "data_only",
+    permissions::Vector{String} = String[],
+    entrypoint::Union{Nothing,String} = nothing,
+    environment::Union{Nothing,String} = nothing,
+    revision::String = repeat("a", 40),
+    sha256::String = repeat("b", 64),
+    compatibility::String = ">=1.0.0,<2.0.0",
+    source::String = "https://registry.aimora.dev/$(family)/$(id)",
+)
+    permission_text = join(("\"$(permission)\"" for permission in permissions), ", ")
+    optional = isnothing(uuid) ? "" : "uuid = \"$(uuid)\"\n"
+    optional *= isnothing(entrypoint) ? "" : "entrypoint = \"$(entrypoint)\"\n"
+    optional *= isnothing(environment) ? "" : "environment = \"$(environment)\"\n"
+    filesystem = family in ("plugin", "automation") ? "project_only" : "none"
+    timeout = family in ("plugin", "automation") ? 300 : 0
+    memory = family in ("plugin", "automation") ? 1024 : 0
+    return """[[entry]]
+id = "$(id)"
+$(optional)version = "1.2.3"
+revision = "$(revision)"
+sha256 = "$(sha256)"
+licence = "MIT"
+compatibility = "$(compatibility)"
+source = "$(source)"
+trust = "$(trust)"
+permissions = [$(permission_text)]
+provenance = "test registry"
+
+[entry.resources]
+network = false
+processes = false
+filesystem = "$(filesystem)"
+timeout_seconds = $(timeout)
+memory_megabytes = $(memory)
+"""
+end
+
+function test_lock_text(family::String, sections::String)
+    return """format = "aimora-lock-v1"
+family = "$(family)"
+version = "1.0.0"
+
+$(sections)"""
+end
+
+@testset "typed format-lock families" begin
+    family_cases = [
+        (
+            "schema",
+            LockSchema,
+            test_lock_entry_section("schema.project"; family = "schema"),
+        ),
+        (
+            "catalog",
+            LockCatalog,
+            test_lock_entry_section("catalog.generic"; family = "catalog"),
+        ),
+        (
+            "import",
+            LockImport,
+            test_lock_entry_section("import.current"; family = "import"),
+        ),
+        (
+            "plugin",
+            LockPlugin,
+            test_lock_entry_section(
+                "plugin.wind";
+                family = "plugin",
+                uuid = "12345678-1234-1234-1234-123456789abc",
+                trust = "trusted_plugin",
+                permissions = ["project.read", "result.write"],
+                entrypoint = "AIMORAWind:register!",
+                environment = "plugins/wind",
+            ),
+        ),
+        (
+            "automation",
+            LockAutomation,
+            test_lock_entry_section(
+                "automation.review";
+                family = "automation",
+                uuid = "87654321-4321-4321-4321-cba987654321",
+                trust = "isolated_untrusted_script",
+                permissions = ["project.read", "study.run"],
+                entrypoint = "ProjectAutomation:run_review",
+                environment = "automation",
+            ),
+        ),
+    ]
+    for (family_name, family, section) in family_cases
+        text = test_lock_text(family_name, section)
+        parsed = parse_format_lock(text; source_name = "$(family_name)-lock.toml")
+        @test format_succeeded(parsed)
+        @test isempty(parsed.diagnostics)
+        @test parsed.value.lock.family == family
+        @test parsed.value.lock.format_version == v"1.0.0"
+        @test length(parsed.value.lock.entries) == 1
+        @test parsed.value.lock.entries[1].family == family
+        @test parsed.value.source.provenance.source_name == "$(family_name)-lock.toml"
+        serialized = serialize_format_lock(parsed.value)
+        @test format_succeeded(serialized)
+        @test serialized.value.media_type == "application/toml"
+        reparsed = parse_format_lock(collect(serialized.value.bytes))
+        @test format_succeeded(reparsed)
+        @test reparsed.value.lock == parsed.value.lock
+    end
+
+    plugin = parse_format_lock(test_lock_text("plugin", family_cases[4][3])).value.lock
+    entry = only(plugin.entries)
+    @test entry.uuid == UUID("12345678-1234-1234-1234-123456789abc")
+    @test entry.permissions == ["project.read", "result.write"]
+    @test entry.entrypoint == "AIMORAWind:register!"
+    @test entry.environment == "plugins/wind"
+    @test entry.resources == LockResourcePolicy(
+        filesystem = LockFilesystemProjectOnly,
+        timeout_seconds = 300,
+        memory_megabytes = 1024,
+    )
+end
+
+@testset "deterministic lock construction and serialization" begin
+    function schema_entry(id, revision_character, hash_character)
+        return FormatLockEntry(
+            LockSchema,
+            id,
+            v"1.0.0",
+            repeat(revision_character, 40),
+            repeat(hash_character, 64),
+            "MIT",
+            ">=1.0.0,<2.0.0",
+            "https://schema.aimora.dev/$(id)",
+            LockDataOnly;
+            provenance = "test schema registry",
+        )
+    end
+    later = schema_entry("schema.z", "a", "b")
+    earlier = schema_entry("schema.a", "c", "d")
+    lock = FormatLockDocument(LockSchema, [later, earlier])
+    @test getfield.(lock.entries, :id) == ["schema.a", "schema.z"]
+    first = serialize_format_lock(lock)
+    second = serialize_format_lock(lock)
+    @test first == second
+    text = String(collect(first.value.bytes))
+    @test findfirst("schema.a", text) < findfirst("schema.z", text)
+    @test !occursin(r"(?:^|[= ])(?:/|~|[A-Za-z]:\\)", text)
+    @test parse_format_lock(collect(first.value.bytes)).value.lock == lock
+
+    @test_throws ArgumentError FormatLockDocument(LockSchema, [earlier, earlier])
+    @test_throws ArgumentError FormatLockEntry(
+        LockSchema,
+        "schema.bad",
+        v"1.0.0",
+        repeat("a", 40),
+        repeat("b", 64),
+        "MIT",
+        "*",
+        "https://schema.aimora.dev/bad",
+        LockDataOnly;
+        provenance = "test",
+    )
+    @test_throws ArgumentError FormatLockEntry(
+        LockSchema,
+        "schema.bad",
+        v"1.0.0",
+        repeat("a", 40),
+        repeat("b", 64),
+        "MIT",
+        ">=1.0.0,<2.0.0",
+        "/home/user/schema",
+        LockDataOnly;
+        provenance = "test",
+    )
+    @test_throws ArgumentError LockResourcePolicy(timeout_seconds = -1)
+end
+
+@testset "format-lock exact diagnostics" begin
+    valid_section = test_lock_entry_section("schema.project"; family = "schema")
+    valid = test_lock_text("schema", valid_section)
+    bad_hash = replace(valid, repeat("b", 64) => "BAD")
+    bad_hash_result = parse_format_lock(bad_hash; source_name = "bad-lock.toml")
+    @test !format_succeeded(bad_hash_result)
+    @test only(bad_hash_result.diagnostics).code == :invalid_lock_entry
+    @test only(bad_hash_result.diagnostics).span.start.line == 9
+    @test only(bad_hash_result.diagnostics).span.start.column == 1
+
+    cases = [
+        (
+            replace(valid, "format = \"aimora-lock-v1\"" => "format = \"aimora-lock-v2\""),
+            :unknown_lock_format,
+        ),
+        (
+            replace(
+                valid,
+                "version = \"1.0.0\"" => "version = \"2.0.0\"";
+                count = 1,
+            ),
+            :unknown_lock_version,
+        ),
+        (replace(valid, "family = \"schema\"" => "family = \"unknown\""), :unknown_lock_family),
+        (
+            replace(
+                valid,
+                "compatibility = \">=1.0.0,<2.0.0\"" =>
+                    "compatibility = \"latest\"",
+            ),
+            :invalid_lock_entry,
+        ),
+        (
+            replace(
+                valid,
+                "source = \"https://registry.aimora.dev/schema/schema.project\"" =>
+                    "source = \"https://user:secret@example.com/repo\"",
+            ),
+            :invalid_lock_entry,
+        ),
+        (
+            replace(
+                valid,
+                "trust = \"data_only\"" => "trust = \"trusted_plugin\"",
+            ),
+            :invalid_lock_entry,
+        ),
+        (replace(valid, "sha256 = \"$(repeat("b", 64))\"\n" => ""), :missing_lock_field),
+        (
+            replace(
+                valid,
+                "version = \"1.0.0\"\n\n" =>
+                    "version = \"1.0.0\"\nmystery = 1\n\n";
+                count = 1,
+            ),
+            :unknown_lock_field,
+        ),
+        ("format = \"aimora-lock-v1\"\nformat = \"aimora-lock-v1\"\n", :invalid_lock_toml),
+    ]
+    for (text, code) in cases
+        result = parse_format_lock(text; source_name = "bad-lock.toml")
+        @test !format_succeeded(result)
+        @test isnothing(result.value)
+        @test any(diagnostic -> diagnostic.code == code, result.diagnostics)
+        @test all(diagnostic -> !isnothing(diagnostic.span), result.diagnostics)
+    end
+
+    duplicate = test_lock_text("schema", valid_section * "\n" * valid_section)
+    duplicate_result = parse_format_lock(duplicate; source_name = "duplicate-lock.toml")
+    @test !format_succeeded(duplicate_result)
+    @test only(duplicate_result.diagnostics).code == :duplicate_lock_id
+    @test only(duplicate_result.diagnostics).span.start.line > 20
+
+    plugin = test_lock_text(
+        "plugin",
+        test_lock_entry_section(
+            "plugin.bad";
+            family = "plugin",
+            uuid = "12345678-1234-1234-1234-123456789abc",
+            trust = "trusted_plugin",
+            permissions = ["project.read"],
+            entrypoint = "Plugin:register!",
+            environment = "../outside",
+        ),
+    )
+    plugin_result = parse_format_lock(plugin; source_name = "plugin-lock.toml")
+    @test !format_succeeded(plugin_result)
+    @test only(plugin_result.diagnostics).span.start.line == 9
+
+    oversized = parse_format_lock(
+        valid;
+        policy = FormatInputPolicy(max_document_bytes = 10),
+    )
+    @test !format_succeeded(oversized)
+    @test only(oversized.diagnostics).code == :document_too_large
+    scalar_limited = parse_format_lock(
+        valid;
+        policy = FormatInputPolicy(max_scalar_bytes = 8),
+    )
+    @test !format_succeeded(scalar_limited)
+    @test only(scalar_limited.diagnostics).code == :scalar_too_large
+    collection_limited = parse_format_lock(
+        valid;
+        policy = FormatInputPolicy(max_collection_items = 4),
+    )
+    @test !format_succeeded(collection_limited)
+    @test only(collection_limited.diagnostics).code == :collection_too_large
+    limited = serialize_format_lock(
+        parse_format_lock(valid).value;
+        policy = FormatInputPolicy(max_document_bytes = 10),
+    )
+    @test !format_succeeded(limited)
+    @test only(limited.diagnostics).code == :document_too_large
+end
+
+@testset "inert Julia environment inspection" begin
+    project = """name = "DemoAutomation"
+uuid = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+version = "1.0.0"
+
+[deps]
+Example = "12345678-1234-1234-1234-123456789abc"
+
+[automation]
+source = "run(`never execute`)"
+"""
+    manifest = """julia_version = "1.10.11"
+manifest_format = "2.0"
+project_hash = "$(repeat("f", 40))"
+
+[[deps.Example]]
+uuid = "12345678-1234-1234-1234-123456789abc"
+version = "1.2.3"
+git-tree-sha1 = "$(repeat("a", 40))"
+"""
+    inspected = inspect_julia_environment(project, manifest)
+    @test format_succeeded(inspected)
+    fingerprint = inspected.value
+    @test fingerprint.project_uuid == UUID("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
+    @test fingerprint.project_version == v"1.0.0"
+    @test fingerprint.julia_version == v"1.10.11"
+    @test fingerprint.manifest_format == "2.0"
+    @test occursin(r"^[0-9a-f]{64}$", fingerprint.project_sha256)
+    @test occursin(r"^[0-9a-f]{64}$", fingerprint.manifest_sha256)
+    dependency = only(fingerprint.dependencies)
+    @test dependency.name == "Example"
+    @test dependency.version == v"1.2.3"
+    @test dependency.git_tree_sha1 == repeat("a", 40)
+
+    project_source = source_document(project; source_name = "automation/Project.toml").value
+    manifest_source = source_document(manifest; source_name = "automation/Manifest.toml").value
+    @test inspect_julia_environment(project_source, manifest_source).value == fingerprint
+    @test inspect_julia_environment(project).value.manifest_sha256 === nothing
+    changed = inspect_julia_environment(project, replace(manifest, "1.2.3" => "1.2.4"))
+    @test changed.value.manifest_sha256 != fingerprint.manifest_sha256
+
+    local_manifest = replace(
+        manifest,
+        "git-tree-sha1 = \"$(repeat("a", 40))\"" => "path = \"/tmp/Example\"",
+    )
+    local_result = inspect_julia_environment(project, local_manifest)
+    @test !format_succeeded(local_result)
+    @test any(
+        diagnostic -> diagnostic.code == :local_julia_dependency_prohibited,
+        local_result.diagnostics,
+    )
+    floating_manifest = replace(
+        manifest,
+        "git-tree-sha1 = \"$(repeat("a", 40))\"" =>
+            "repo-url = \"https://example.com/Example.jl\"\nrepo-rev = \"main\"",
+    )
+    floating_result = inspect_julia_environment(project, floating_manifest)
+    @test !format_succeeded(floating_result)
+    @test any(
+        diagnostic -> diagnostic.code == :floating_julia_dependency,
+        floating_result.diagnostics,
+    )
+    missing_result = inspect_julia_environment(project, replace(manifest, "Example" => "Other"))
+    @test !format_succeeded(missing_result)
+    @test any(
+        diagnostic -> diagnostic.code == :julia_manifest_dependency_missing,
+        missing_result.diagnostics,
+    )
+    malformed = inspect_julia_environment("name = [\n")
+    @test !format_succeeded(malformed)
+    @test only(malformed.diagnostics).code == :invalid_julia_project_toml
+    limited = inspect_julia_environment(
+        project,
+        manifest;
+        policy = FormatInputPolicy(max_scalar_bytes = 8),
+    )
+    @test !format_succeeded(limited)
+    @test only(limited.diagnostics).code == :scalar_too_large
 end
