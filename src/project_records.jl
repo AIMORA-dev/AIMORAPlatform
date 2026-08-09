@@ -1,54 +1,7 @@
-"""A lowercase SHA-256 content identity supplied by an admitted source or semantic normalizer."""
-struct ContentDigest
-    sha256::String
-
-    function ContentDigest(sha256::AbstractString)
-        normalized = String(sha256)
-        occursin(r"^[0-9a-f]{64}$", normalized) ||
-            _semantic_fail(:invalid_content_digest, "content digest must be lowercase SHA-256 hexadecimal")
-        return new(normalized)
-    end
-end
-
-Base.string(digest::ContentDigest) = digest.sha256
-Base.:(==)(left::ContentDigest, right::ContentDigest) = left.sha256 == right.sha256
-Base.hash(digest::ContentDigest, seed::UInt) = hash(digest.sha256, seed)
-
 @enum ProjectVerificationState::UInt8 begin
     ProjectUnverified = 0x01
     ProjectVerified = 0x02
 end
-
-const CanonicalFieldData = Union{
-    Bool,
-    BigInt,
-    ExactDecimal,
-    ExactRational,
-    String,
-    PhysicalValue,
-    ProjectReference,
-    ArtifactIdentity,
-}
-
-"""One immutable schema-owned canonical field value."""
-struct CanonicalField
-    name::String
-    value::CanonicalFieldData
-
-    function CanonicalField(name::AbstractString, value::CanonicalFieldData)
-        normalized = String(name)
-        occursin(r"^[a-z][a-z0-9_]*$", normalized) ||
-            _semantic_fail(:invalid_canonical_field_name, "canonical field name is not lowercase portable text")
-        owned_value = value isa String ? String(value) : value
-        owned_value isa String && occursin('\0', owned_value) &&
-            _semantic_fail(:invalid_canonical_string, "canonical string value contains NUL")
-        return new(normalized, owned_value)
-    end
-end
-
-CanonicalField(name::AbstractString, value::Integer) = CanonicalField(name, BigInt(value))
-CanonicalField(name::AbstractString, value::AbstractString) = CanonicalField(name, String(value))
-Base.:(==)(left::CanonicalField, right::CanonicalField) = left.name == right.name && left.value == right.value
 
 """One immutable semantic record governed by an exact registered schema."""
 struct CanonicalRecord
@@ -127,6 +80,7 @@ struct CanonicalProject
     units::UnitRegistry
     records::CanonicalList{CanonicalRecord}
     graphs::SemanticGraphs
+    asset_library::AssetLibrary
     verification::ProjectVerificationState
 
     function CanonicalProject(
@@ -135,13 +89,22 @@ struct CanonicalProject
         units::UnitRegistry,
         records::AbstractVector{CanonicalRecord},
         graphs::SemanticGraphs,
+        asset_library::AssetLibrary,
         verification::ProjectVerificationState,
     )
         copied = sort!(collect(records); by = record -> record.identity.id.value)
         ids = getfield.(getfield.(copied, :identity), :id)
         length(ids) == length(unique(ids)) ||
             _semantic_fail(:duplicate_record_id, "canonical project repeats a record ID")
-        return new(metadata, registry, units, CanonicalList{CanonicalRecord}(copied), graphs, verification)
+        return new(
+            metadata,
+            registry,
+            units,
+            CanonicalList{CanonicalRecord}(copied),
+            graphs,
+            asset_library,
+            verification,
+        )
     end
 end
 
@@ -151,7 +114,16 @@ CanonicalProject(
     units::UnitRegistry,
     records::AbstractVector{CanonicalRecord},
     verification::ProjectVerificationState,
-) = CanonicalProject(metadata, registry, units, records, SemanticGraphs(), verification)
+) = CanonicalProject(metadata, registry, units, records, SemanticGraphs(), AssetLibrary(), verification)
+
+CanonicalProject(
+    metadata::ProjectMetadata,
+    registry::SemanticSchemaRegistry,
+    units::UnitRegistry,
+    records::AbstractVector{CanonicalRecord},
+    graphs::SemanticGraphs,
+    verification::ProjectVerificationState,
+) = CanonicalProject(metadata, registry, units, records, graphs, AssetLibrary(), verification)
 
 Base.:(==)(left::CanonicalProject, right::CanonicalProject) =
     left.metadata == right.metadata &&
@@ -159,6 +131,7 @@ Base.:(==)(left::CanonicalProject, right::CanonicalProject) =
     left.units == right.units &&
     left.records == right.records &&
     left.graphs == right.graphs &&
+    left.asset_library == right.asset_library &&
     left.verification == right.verification
 
 function _validate_record(project::CanonicalProject, record::CanonicalRecord)
@@ -187,6 +160,7 @@ function validate_project(project::CanonicalProject)
         _validate_record(project, record)
     end
     validate_graphs(project)
+    validate_asset_library(project)
     return true
 end
 
@@ -200,6 +174,7 @@ function verified_project(project::CanonicalProject)
         project.units,
         collect(project.records),
         project.graphs,
+        project.asset_library,
         ProjectVerified,
     )
 end
@@ -211,7 +186,8 @@ unsafe_project(
     units::UnitRegistry,
     records::AbstractVector{CanonicalRecord},
     graphs::SemanticGraphs = SemanticGraphs(),
-) = CanonicalProject(metadata, registry, units, records, graphs, ProjectUnverified)
+    asset_library::AssetLibrary = AssetLibrary(),
+) = CanonicalProject(metadata, registry, units, records, graphs, asset_library, ProjectUnverified)
 
 function CanonicalProject(
     metadata::ProjectMetadata,
@@ -219,8 +195,9 @@ function CanonicalProject(
     units::UnitRegistry,
     records::AbstractVector{CanonicalRecord},
     graphs::SemanticGraphs = SemanticGraphs(),
+    asset_library::AssetLibrary = AssetLibrary(),
 )
-    return verified_project(unsafe_project(metadata, registry, units, records, graphs))
+    return verified_project(unsafe_project(metadata, registry, units, records, graphs, asset_library))
 end
 
 function project_record(project::CanonicalProject, id::ProjectId)
@@ -234,11 +211,27 @@ function _replace_project_record(project::CanonicalProject, replacement::Canonic
     index = findfirst(record -> record.identity.id == replacement.identity.id, records)
     isnothing(index) && _semantic_fail(:unknown_record_id, "canonical project record does not exist")
     records[index] = replacement
-    return CanonicalProject(project.metadata, project.registry, project.units, records, project.graphs, ProjectUnverified)
+    return CanonicalProject(
+        project.metadata,
+        project.registry,
+        project.units,
+        records,
+        project.graphs,
+        project.asset_library,
+        ProjectUnverified,
+    )
 end
 
 function _replace_project_metadata(project::CanonicalProject, metadata::ProjectMetadata)
-    return CanonicalProject(metadata, project.registry, project.units, collect(project.records), project.graphs, ProjectUnverified)
+    return CanonicalProject(
+        metadata,
+        project.registry,
+        project.units,
+        collect(project.records),
+        project.graphs,
+        project.asset_library,
+        ProjectUnverified,
+    )
 end
 
 function _replace_project_graphs(project::CanonicalProject, graphs::SemanticGraphs)
@@ -248,6 +241,19 @@ function _replace_project_graphs(project::CanonicalProject, graphs::SemanticGrap
         project.units,
         collect(project.records),
         graphs,
+        project.asset_library,
+        ProjectUnverified,
+    )
+end
+
+function _replace_asset_library(project::CanonicalProject, asset_library::AssetLibrary)
+    return CanonicalProject(
+        project.metadata,
+        project.registry,
+        project.units,
+        collect(project.records),
+        project.graphs,
+        asset_library,
         ProjectUnverified,
     )
 end

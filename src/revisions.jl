@@ -143,6 +143,7 @@ function _apply_patch(project::CanonicalProject, patch::AddRecordPatch)
         project.units,
         records,
         project.graphs,
+        project.asset_library,
         ProjectUnverified,
     )
     return updated, _record_effect(patch.record.identity.id)
@@ -159,6 +160,7 @@ function _apply_patch(project::CanonicalProject, patch::RemoveRecordPatch)
         project.units,
         records,
         project.graphs,
+        project.asset_library,
         ProjectUnverified,
     )
     return updated, _record_effect(patch.owner)
@@ -219,6 +221,7 @@ function _apply_patch(project::CanonicalProject, patch::UnsafeReplaceRecordsPatc
         project.units,
         collect(patch.records),
         project.graphs,
+        project.asset_library,
     )
     owner = project.metadata.identity.id
     effect = CommandEffect(owner, DependencyInvalidation(owner, [InvalidateAllResults, InvalidateViews]))
