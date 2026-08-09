@@ -1,0 +1,12 @@
+schema = "aimora-examples-v2"
+
+[[case]]
+id = "native_demo"
+study = "core"
+path = "examples/native_demo/run.jl"
+entrypoint = "examples/native_demo/run.jl"
+description = "Inert native catalogue fixture."
+requires_solver = false
+reference_compatible = false
+result_kind = "catalog"
+source_ids = ["aimora-test:native-migration"]

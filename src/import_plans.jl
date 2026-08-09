@@ -446,6 +446,114 @@ import_plan_sha256(plan::ImportPlan) = _import_plan_digest(
     plan.applicable,
 )
 
+function _compile_import_components(
+    source::SourceDocument,
+    adapter::ImportAdapterIdentity,
+    source_records::AbstractVector{ImportSourceRecord},
+    operations::AbstractVector{<:ImportPlanOperation},
+    accounting::AbstractVector{ImportFieldAccounting};
+    assumptions::AbstractVector{ImportAssumption} = ImportAssumption[],
+    losses::AbstractVector{ImportConversionLoss} = ImportConversionLoss[],
+)
+    record_ids = getfield.(source_records, :record_id)
+    length(record_ids) == length(unique(record_ids)) ||
+        throw(ArgumentError("import source records repeat an ID"))
+    source_fields = Set{Tuple{String,String}}()
+    for record in source_records, field in record.fields
+        key = (record.record_id, field.name)
+        key in source_fields && throw(ArgumentError("import source record repeats a field"))
+        push!(source_fields, key)
+    end
+    accounted_fields = [
+        (item.source.record_id, item.source.field) for item in accounting
+    ]
+    length(accounted_fields) == length(unique(accounted_fields)) ||
+        throw(ArgumentError("import report accounts for a source field more than once"))
+    Set(accounted_fields) == source_fields ||
+        throw(ArgumentError("import report does not account for every source field"))
+    for item in accounting
+        if item.disposition == ImportMapped
+            isnothing(item.destination) &&
+                throw(ArgumentError("mapped import accounting lacks a destination"))
+        else
+            !isnothing(item.destination) &&
+                throw(ArgumentError("nonmapped import accounting declares a destination"))
+            (isnothing(item.justification) || isempty(item.justification)) &&
+                throw(ArgumentError("nonmapped import accounting lacks a justification"))
+        end
+    end
+    assumption_ids = getfield.(assumptions, :id)
+    length(assumption_ids) == length(unique(assumption_ids)) ||
+        throw(ArgumentError("import report repeats an assumption ID"))
+    for assumption in assumptions, source_ref in assumption.affected_fields
+        (source_ref.record_id, source_ref.field) in source_fields ||
+            throw(ArgumentError("import assumption cites an unknown source field"))
+    end
+    loss_ids = getfield.(losses, :id)
+    length(loss_ids) == length(unique(loss_ids)) ||
+        throw(ArgumentError("import report repeats a conversion-loss ID"))
+    loss_fields = [(loss.source.record_id, loss.source.field) for loss in losses]
+    length(loss_fields) == length(unique(loss_fields)) ||
+        throw(ArgumentError("import report repeats a conversion loss for one source field"))
+    blocking_fields = [
+        (item.source.record_id, item.source.field) for item in accounting
+        if item.disposition in (ImportUnsupported, ImportRejected)
+    ]
+    Set(loss_fields) == Set(blocking_fields) ||
+        throw(ArgumentError("import conversion losses differ from blocking field accounting"))
+    created_objects = Set{String}()
+    for operation in operations
+        if operation isa ImportCreateObject
+            operation.object_id in created_objects &&
+                throw(ArgumentError("import plan creates an object more than once"))
+            operation.source_record_id in record_ids ||
+                throw(ArgumentError("import object creation cites an unknown source record"))
+            push!(created_objects, operation.object_id)
+        else
+            operation.object_id in created_objects ||
+                throw(ArgumentError("import assignment precedes or lacks object creation"))
+            (operation.source.record_id, operation.source.field) in source_fields ||
+                throw(ArgumentError("import assignment cites an unknown source field"))
+        end
+    end
+    counts = Dict(
+        disposition => count(item -> item.disposition == disposition, accounting)
+        for disposition in instances(ImportFieldDisposition)
+    )
+    complete = iszero(counts[ImportUnsupported]) && iszero(counts[ImportRejected])
+    report = ImportConversionReport(
+        length(source_records),
+        length(accounting),
+        counts[ImportMapped],
+        counts[ImportIgnored],
+        counts[ImportUnsupported],
+        counts[ImportRejected],
+        length(operations),
+        complete,
+        FormatItemList(collect(accounting)),
+        FormatItemList(collect(assumptions)),
+        FormatItemList(collect(losses)),
+        Val(:compiled_import_report),
+    )
+    digest = _import_plan_digest(
+        adapter,
+        source.provenance.content_sha256,
+        source_records,
+        operations,
+        complete,
+    )
+    plan = ImportPlan(
+        adapter,
+        source.provenance.content_sha256,
+        source_records,
+        operations,
+        complete,
+        digest,
+        Val(:compiled_import_plan),
+    )
+    return GenericImportResult(plan, report)
+end
+
 function _import_rule_diagnostic(code::Symbol, message::String, span::SourceSpan)
     return FormatDiagnostic(DiagnosticError, code, message, span)
 end
@@ -620,42 +728,13 @@ function compile_generic_table_import(
             ))
         end
     end
-    counts = Dict(
-        disposition => count(item -> item.disposition == disposition, accounting)
-        for disposition in instances(ImportFieldDisposition)
-    )
-    total_fields = length(accounting)
-    sum(values(counts)) == total_fields || error("import accounting invariant failed")
-    complete = iszero(counts[ImportUnsupported]) && iszero(counts[ImportRejected])
-    report = ImportConversionReport(
-        length(source_records),
-        total_fields,
-        counts[ImportMapped],
-        counts[ImportIgnored],
-        counts[ImportUnsupported],
-        counts[ImportRejected],
-        length(operations),
-        complete,
-        FormatItemList(accounting),
-        FormatItemList(collect(assumptions)),
-        FormatItemList(losses),
-        Val(:compiled_import_report),
-    )
-    digest = _import_plan_digest(
+    return FormatResult(_compile_import_components(
+        parsed.source,
         adapter,
-        parsed.source.provenance.content_sha256,
         source_records,
         operations,
-        complete,
-    )
-    plan = ImportPlan(
-        adapter,
-        parsed.source.provenance.content_sha256,
-        source_records,
-        operations,
-        complete,
-        digest,
-        Val(:compiled_import_plan),
-    )
-    return FormatResult(GenericImportResult(plan, report))
+        accounting;
+        assumptions,
+        losses,
+    ))
 end

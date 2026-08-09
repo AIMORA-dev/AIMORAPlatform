@@ -229,6 +229,10 @@ export ArtifactEnvelope,
     parse_registered_function_identity,
     parse_restricted_expression,
     parse_restricted_yaml,
+    read_aimora_asset_csv,
+    read_aimora_cases_catalog_v2,
+    read_aimora_catalog_entry_v1,
+    read_aimora_project_v1,
     resolve_project_documents,
     schema_compatibility,
     serialize_canonical_json,
@@ -273,5 +277,6 @@ include("inert_envelopes.jl")
 include("restricted_expressions.jl")
 include("project_documents.jl")
 include("import_plans.jl")
+include("native_migrations.jl")
 
 end

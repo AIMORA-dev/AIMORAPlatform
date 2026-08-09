@@ -1,0 +1,18 @@
+schema = "aimora-catalog-entry-v1"
+id = "generic_line"
+equipment_class = "overhead_line"
+manufacturer = ""
+model = "Generic line"
+provenance = "Synthetic native migration fixture"
+licence = "PolyForm-Noncommercial-1.0.0"
+
+[common]
+rated_voltage_kv = 132.0
+phase_count = 3
+
+[study.power_flow]
+resistance_ohm_per_km = 0.08
+
+[study.emt]
+representation = "geometry_required"
+unsupported_phenomena = ["corona", "weather"]
