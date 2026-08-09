@@ -221,10 +221,29 @@ end
         SemanticSchema,
         NamespaceRegistration,
         SemanticSchemaRegistry,
+        ContentDigest,
+        CanonicalField,
+        CanonicalRecord,
+        ProjectMetadata,
+        CanonicalProject,
+        RevisionProvenance,
+        DependencyInvalidation,
+        CommandEffect,
+        AddRecordPatch,
+        RemoveRecordPatch,
+        SetRecordFieldPatch,
+        UnsetRecordFieldPatch,
+        SetProjectNamePatch,
+        UnsafeReplaceRecordsPatch,
+        ProjectCommand,
+        ProjectRevision,
+        RevisionConflict,
+        ProjectSnapshot,
     ]
     for canonical_type in canonical_types
         @test all(field_type -> field_type != Any, fieldtypes(canonical_type))
         @test all(field_type -> !(field_type isa DataType && field_type <: Function), fieldtypes(canonical_type))
+        @test !ismutabletype(canonical_type)
     end
     @test :default ∉ fieldnames(SchemaField)
     @test all(constraint -> !(constraint isa Function), schema.fields[1].constraints)

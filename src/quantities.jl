@@ -229,6 +229,8 @@ struct UnitRegistry
     end
 end
 
+Base.:(==)(left::UnitRegistry, right::UnitRegistry) = left.units == right.units
+
 function lookup_unit(registry::UnitRegistry, id::UnitId)
     index = findfirst(unit -> unit.id == id, registry.units)
     isnothing(index) && _semantic_fail(:unknown_unit_id, "unit $(id.value) is not registered")

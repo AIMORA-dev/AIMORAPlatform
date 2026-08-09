@@ -48,6 +48,8 @@ struct ProvenanceSource
         version = isnothing(source_version) ? nothing : String(source_version)
         !isnothing(version) && isempty(strip(version)) &&
             _semantic_fail(:invalid_source_version, "provenance source version must not be empty")
+        !isnothing(version) && occursin('\0', version) &&
+            _semantic_fail(:invalid_source_version, "provenance source version contains NUL")
         return new(id, normalized_citation, source_uri, digest, version, licence)
     end
 end
