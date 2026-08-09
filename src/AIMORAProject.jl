@@ -334,6 +334,67 @@ export AddDefinitionInstancePatch,
     reusable_definition,
     validate_hierarchy
 
+export AddControlBlockSchemaPatch,
+    AddControlNetworkPatch,
+    AlgebraicLoopError,
+    AlgebraicLoopFailurePolicy,
+    AlgebraicLoopDeclaration,
+    AlgebraicLoopRejectStep,
+    CheckpointExcluded,
+    CheckpointOptional,
+    CheckpointRequired,
+    ContinuousControlState,
+    ContinuousResidualEvaluation,
+    ControlActuatorBinding,
+    ControlBlock,
+    ControlBlockSchema,
+    ControlBoundaryBinding,
+    ControlBoundaryKind,
+    ControlCheckpointPolicy,
+    ControlContinuous,
+    ControlDiscrete,
+    ControlEventDriven,
+    ControlExecutionDomain,
+    ControlExternalPort,
+    ControlHybrid,
+    ControlImportProvenance,
+    ControlLinkDelay,
+    ControlMeasurementBinding,
+    ControlNetwork,
+    ControlPortBinding,
+    ControlPortSpec,
+    ControlResetPolicy,
+    ControlRollbackPolicy,
+    ControlSampled,
+    ControlSchedule,
+    ControlSchedulerSemantics,
+    ControlStateDeclaration,
+    ControlStateKind,
+    ControlStateSpec,
+    ControlSystem,
+    DelayControlState,
+    DiscreteControlState,
+    DiscreteEventUpdate,
+    EventControlState,
+    HoldControlState,
+    HybridOrderedExecution,
+    LimiterControlState,
+    ReadComputeEnqueueReleaseWriteHold,
+    RemoveControlBlockSchemaPatch,
+    RemoveControlNetworkPatch,
+    ReplaceControlNetworkPatch,
+    ResetFromEventValue,
+    ResetRetain,
+    ResetToInitial,
+    RollbackProhibited,
+    RollbackRecompute,
+    RollbackRestoreAccepted,
+    SampleControlState,
+    control_block,
+    control_block_schema,
+    control_network,
+    validate_control_system
+
 include("identities.jl")
 include("quantities.jl")
 include("provenance.jl")
@@ -341,16 +402,19 @@ include("schema_registry.jl")
 include("canonical_fields.jl")
 include("graph_types.jl")
 include("asset_types.jl")
+include("control_types.jl")
 include("hierarchy_types.jl")
 include("project_records.jl")
 include("graph_validation.jl")
 include("asset_validation.jl")
+include("control_validation.jl")
 include("hierarchy_validation.jl")
 include("hierarchy_expansion.jl")
 include("revisions.jl")
 include("graph_patches.jl")
 include("asset_patches.jl")
 include("hierarchy_patches.jl")
+include("control_patches.jl")
 include("transactions.jl")
 
 end

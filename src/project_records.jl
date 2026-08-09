@@ -82,6 +82,7 @@ struct CanonicalProject
     graphs::SemanticGraphs
     asset_library::AssetLibrary
     hierarchy::HierarchyModel
+    control_system::ControlSystem
     verification::ProjectVerificationState
 
     function CanonicalProject(
@@ -92,6 +93,7 @@ struct CanonicalProject
         graphs::SemanticGraphs,
         asset_library::AssetLibrary,
         hierarchy::HierarchyModel,
+        control_system::ControlSystem,
         verification::ProjectVerificationState,
     )
         copied = sort!(collect(records); by = record -> record.identity.id.value)
@@ -106,6 +108,7 @@ struct CanonicalProject
             graphs,
             asset_library,
             hierarchy,
+            control_system,
             verification,
         )
     end
@@ -117,7 +120,7 @@ CanonicalProject(
     units::UnitRegistry,
     records::AbstractVector{CanonicalRecord},
     verification::ProjectVerificationState,
-) = CanonicalProject(metadata, registry, units, records, SemanticGraphs(), AssetLibrary(), HierarchyModel(), verification)
+) = CanonicalProject(metadata, registry, units, records, SemanticGraphs(), AssetLibrary(), HierarchyModel(), ControlSystem(), verification)
 
 CanonicalProject(
     metadata::ProjectMetadata,
@@ -126,7 +129,7 @@ CanonicalProject(
     records::AbstractVector{CanonicalRecord},
     graphs::SemanticGraphs,
     verification::ProjectVerificationState,
-) = CanonicalProject(metadata, registry, units, records, graphs, AssetLibrary(), HierarchyModel(), verification)
+) = CanonicalProject(metadata, registry, units, records, graphs, AssetLibrary(), HierarchyModel(), ControlSystem(), verification)
 
 CanonicalProject(
     metadata::ProjectMetadata,
@@ -136,7 +139,18 @@ CanonicalProject(
     graphs::SemanticGraphs,
     asset_library::AssetLibrary,
     verification::ProjectVerificationState,
-) = CanonicalProject(metadata, registry, units, records, graphs, asset_library, HierarchyModel(), verification)
+) = CanonicalProject(metadata, registry, units, records, graphs, asset_library, HierarchyModel(), ControlSystem(), verification)
+
+CanonicalProject(
+    metadata::ProjectMetadata,
+    registry::SemanticSchemaRegistry,
+    units::UnitRegistry,
+    records::AbstractVector{CanonicalRecord},
+    graphs::SemanticGraphs,
+    asset_library::AssetLibrary,
+    hierarchy::HierarchyModel,
+    verification::ProjectVerificationState,
+) = CanonicalProject(metadata, registry, units, records, graphs, asset_library, hierarchy, ControlSystem(), verification)
 
 Base.:(==)(left::CanonicalProject, right::CanonicalProject) =
     left.metadata == right.metadata &&
@@ -146,6 +160,7 @@ Base.:(==)(left::CanonicalProject, right::CanonicalProject) =
     left.graphs == right.graphs &&
     left.asset_library == right.asset_library &&
     left.hierarchy == right.hierarchy &&
+    left.control_system == right.control_system &&
     left.verification == right.verification
 
 function _validate_record(project::CanonicalProject, record::CanonicalRecord)
@@ -176,6 +191,7 @@ function validate_project(project::CanonicalProject)
     validate_graphs(project)
     validate_asset_library(project)
     validate_hierarchy(project)
+    validate_control_system(project)
     return true
 end
 
@@ -191,6 +207,7 @@ function verified_project(project::CanonicalProject)
         project.graphs,
         project.asset_library,
         project.hierarchy,
+        project.control_system,
         ProjectVerified,
     )
 end
@@ -204,7 +221,8 @@ unsafe_project(
     graphs::SemanticGraphs = SemanticGraphs(),
     asset_library::AssetLibrary = AssetLibrary(),
     hierarchy::HierarchyModel = HierarchyModel(),
-) = CanonicalProject(metadata, registry, units, records, graphs, asset_library, hierarchy, ProjectUnverified)
+    control_system::ControlSystem = ControlSystem(),
+) = CanonicalProject(metadata, registry, units, records, graphs, asset_library, hierarchy, control_system, ProjectUnverified)
 
 function CanonicalProject(
     metadata::ProjectMetadata,
@@ -214,8 +232,9 @@ function CanonicalProject(
     graphs::SemanticGraphs = SemanticGraphs(),
     asset_library::AssetLibrary = AssetLibrary(),
     hierarchy::HierarchyModel = HierarchyModel(),
+    control_system::ControlSystem = ControlSystem(),
 )
-    return verified_project(unsafe_project(metadata, registry, units, records, graphs, asset_library, hierarchy))
+    return verified_project(unsafe_project(metadata, registry, units, records, graphs, asset_library, hierarchy, control_system))
 end
 
 function project_record(project::CanonicalProject, id::ProjectId)
@@ -237,6 +256,7 @@ function _replace_project_record(project::CanonicalProject, replacement::Canonic
         project.graphs,
         project.asset_library,
         project.hierarchy,
+        project.control_system,
         ProjectUnverified,
     )
 end
@@ -250,6 +270,7 @@ function _replace_project_metadata(project::CanonicalProject, metadata::ProjectM
         project.graphs,
         project.asset_library,
         project.hierarchy,
+        project.control_system,
         ProjectUnverified,
     )
 end
@@ -263,6 +284,7 @@ function _replace_project_graphs(project::CanonicalProject, graphs::SemanticGrap
         graphs,
         project.asset_library,
         project.hierarchy,
+        project.control_system,
         ProjectUnverified,
     )
 end
@@ -276,6 +298,7 @@ function _replace_asset_library(project::CanonicalProject, asset_library::AssetL
         project.graphs,
         asset_library,
         project.hierarchy,
+        project.control_system,
         ProjectUnverified,
     )
 end
@@ -289,6 +312,21 @@ function _replace_hierarchy(project::CanonicalProject, hierarchy::HierarchyModel
         project.graphs,
         project.asset_library,
         hierarchy,
+        project.control_system,
+        ProjectUnverified,
+    )
+end
+
+function _replace_control_system(project::CanonicalProject, control_system::ControlSystem)
+    return CanonicalProject(
+        project.metadata,
+        project.registry,
+        project.units,
+        collect(project.records),
+        project.graphs,
+        project.asset_library,
+        project.hierarchy,
+        control_system,
         ProjectUnverified,
     )
 end

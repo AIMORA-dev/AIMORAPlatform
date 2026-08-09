@@ -106,7 +106,8 @@ function _validate_local_reference(project::CanonicalProject, reference::Project
     if reference.kind == ReferenceNode
         _find_node(project.graphs, id)
     elseif reference.kind == ReferenceAsset
-        project_record(project, id)
+        _asset_or_record_exists(project, id) ||
+            _semantic_fail(:dangling_cross_graph_reference, "typed asset target does not exist")
     elseif reference.kind in (ReferenceControlBlock, ReferenceEvent, ReferenceStudy, ReferenceWorkflow, ReferenceResult, ReferenceView)
         any(record -> record.identity.id == id, project.records) ||
             _semantic_fail(:dangling_cross_graph_reference, "typed cross-graph target record does not exist")
@@ -145,6 +146,11 @@ function validate_graphs(project::CanonicalProject)
     record_ids = Set(record.identity.id for record in project.records)
     isempty(intersect(record_ids, Set(graph_ids))) ||
         _semantic_fail(:graph_record_identity_collision, "graph element ID collides with a canonical record ID")
+    port_owner_ids = union(
+        record_ids,
+        Set(item.identity.id for item in project.asset_library.assets),
+        Set(_control_port_owner_ids(project.control_system)),
+    )
     registered_namespaces = Set(item.namespace for item in project.registry.namespaces)
     for node in graphs.nodes
         node.domain.type.namespace in registered_namespaces ||
@@ -152,7 +158,7 @@ function validate_graphs(project::CanonicalProject)
         !isnothing(node.nominal_level) && validate_quantity(project.units, node.nominal_level)
     end
     for port in graphs.ports
-        port.owner in record_ids || _semantic_fail(:dangling_port_owner, "port owner record does not exist")
+        port.owner in port_owner_ids || _semantic_fail(:dangling_port_owner, "port owner semantic object does not exist")
         port.domain.type.namespace in registered_namespaces ||
             _semantic_fail(:unknown_graph_domain_namespace, "port domain namespace is not registered")
         !isnothing(port.nominal_level) && validate_quantity(project.units, port.nominal_level)
@@ -165,15 +171,6 @@ function validate_graphs(project::CanonicalProject)
     end
     foreach(connection -> _validate_physical_connection(project, connection), graphs.physical_connections)
     foreach(connection -> _validate_signal_connection(project, connection), graphs.signal_connections)
-    signal_edges = Tuple{ProjectId,ProjectId}[
-        (
-            _find_port(graphs, connection.source_port).owner,
-            _find_port(graphs, connection.target_port).owner,
-        )
-        for connection in graphs.signal_connections if !connection.delayed
-    ]
-    _has_directed_cycle(ProjectId[port.owner for port in graphs.ports], signal_edges) &&
-        _semantic_fail(:algebraic_signal_cycle, "signal graph contains a pure algebraic cycle")
     workflow_vertices = ProjectId[collect(record_ids)...]
     workflow_edges = Tuple{ProjectId,ProjectId}[(edge.upstream, edge.downstream) for edge in graphs.workflow_dependencies]
     all(edge -> edge.upstream in record_ids && edge.downstream in record_ids, graphs.workflow_dependencies) ||
@@ -192,7 +189,7 @@ function validate_graphs(project::CanonicalProject)
     ), element in collection
         push!(nonview_ids, element.identity.id)
     end
-    semantic_owners = union(record_ids, nonview_ids)
+    semantic_owners = union(port_owner_ids, nonview_ids, Set(_control_owner_ids(project.control_system)))
     for projection in graphs.view_projections
         projection.view in record_ids || _semantic_fail(:dangling_view_owner, "view projection references a missing view record")
         projection.semantic_owner in semantic_owners ||

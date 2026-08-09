@@ -3,12 +3,14 @@ struct InstanceExpansion
     records::CanonicalList{CanonicalRecord}
     assets::CanonicalList{CanonicalAsset}
     graphs::SemanticGraphs
+    controls::ControlSystem
     identities::CanonicalList{ExpansionIdentity}
 end
 
 Base.:(==)(left::InstanceExpansion, right::InstanceExpansion) =
     left.instance == right.instance && left.records == right.records &&
     left.assets == right.assets && left.graphs == right.graphs &&
+    left.controls == right.controls &&
     left.identities == right.identities
 
 _scoped_id(prefix::ProjectId, local_id::ProjectId) = ProjectId(prefix.value * "." * local_id.value)
@@ -146,6 +148,124 @@ function _expanded_internal_graphs(definition::ReusableDefinition, prefix::Proje
     return SemanticGraphs(; nodes, ports, physical_connections, signal_connections, workflow_dependencies)
 end
 
+function _scoped_reference(prefix::ProjectId, reference::ProjectReference)
+    reference.target isa GlobalReferenceTarget && return reference
+    return ProjectReference(
+        reference.kind,
+        _scoped_id(prefix, reference.target.id);
+        path = reference.path,
+    )
+end
+
+function _expanded_control_system(system::ControlSystem, prefix::ProjectId)
+    networks = ControlNetwork[]
+    for network in system.networks
+        blocks = ControlBlock[]
+        for block in network.blocks
+            states = ControlStateDeclaration[
+                ControlStateDeclaration(
+                    _scoped_identity(prefix, state.identity),
+                    state.name,
+                    state.kind,
+                    state.initial_value,
+                    state.reset,
+                    state.rollback,
+                    state.checkpoint,
+                    state.provenance,
+                ) for state in block.states
+            ]
+            push!(blocks, ControlBlock(
+                _scoped_identity(prefix, block.identity),
+                block.schema,
+                collect(block.parameters),
+                ControlPortBinding[
+                    ControlPortBinding(binding.name, _scoped_id(prefix, binding.port))
+                    for binding in block.ports
+                ],
+                states,
+                block.provenance,
+            ))
+        end
+        schedule = ControlSchedule(
+            network.schedule.domain,
+            network.schedule.semantics,
+            ProjectId[_scoped_id(prefix, id) for id in network.schedule.task_order];
+            sample_time = network.schedule.sample_time,
+            phase_offset = network.schedule.phase_offset,
+            computational_delay = network.schedule.computational_delay,
+        )
+        boundaries = ControlBoundaryBinding[
+            ControlBoundaryBinding(
+                _scoped_identity(prefix, binding.identity),
+                binding.kind,
+                _scoped_id(prefix, binding.control_port),
+                _scoped_reference(prefix, binding.target),
+                binding.provenance,
+            ) for binding in network.boundary_bindings
+        ]
+        link_delays = ControlLinkDelay[
+            ControlLinkDelay(
+                _scoped_id(prefix, delay.link),
+                delay.duration,
+                ControlStateDeclaration(
+                    _scoped_identity(prefix, delay.state.identity),
+                    delay.state.name,
+                    delay.state.kind,
+                    delay.state.initial_value,
+                    delay.state.reset,
+                    delay.state.rollback,
+                    delay.state.checkpoint,
+                    delay.state.provenance,
+                ),
+            ) for delay in network.link_delays
+        ]
+        loops = AlgebraicLoopDeclaration[
+            AlgebraicLoopDeclaration(
+                _scoped_identity(prefix, loop.identity),
+                ProjectId[_scoped_id(prefix, id) for id in loop.blocks],
+                loop.solver,
+                loop.residual,
+                loop.jacobian,
+                loop.tolerance,
+                loop.maximum_iterations,
+                loop.on_failure,
+                loop.provenance,
+            ) for loop in network.algebraic_loops
+        ]
+        push!(networks, ControlNetwork(
+            _scoped_identity(prefix, network.identity),
+            schedule,
+            ControlExternalPort[
+                ControlExternalPort(port.name, _scoped_id(prefix, port.port), port.direction)
+                for port in network.external_ports
+            ],
+            blocks,
+            ProjectId[_scoped_id(prefix, id) for id in network.links],
+            ProjectId[_scoped_id(prefix, id) for id in network.initialization_order],
+            boundaries,
+            loops,
+            network.provenance;
+            link_delays,
+            import_provenance = network.import_provenance,
+        ))
+    end
+    return ControlSystem(block_schemas = collect(system.block_schemas), networks = networks)
+end
+
+function _merge_control_systems(parts::AbstractVector{ControlSystem})
+    schemas = ControlBlockSchema[]
+    for part in parts, schema in part.block_schemas
+        index = findfirst(item -> item.identity == schema.identity, schemas)
+        if isnothing(index)
+            push!(schemas, schema)
+        elseif schemas[index] != schema
+            _semantic_fail(:control_block_schema_collision, "expanded control systems disagree on one schema identity")
+        end
+    end
+    networks = reduce(vcat, (collect(part.networks) for part in parts); init = ControlNetwork[])
+    return ControlSystem(block_schemas = schemas, networks = networks)
+end
+
 function _binding_connections(
     definition::ReusableDefinition,
     instance::DefinitionInstance,
@@ -196,6 +316,7 @@ function _expand_instance(
     records = _expanded_records(definition, instance, prefix)
     assets = _expanded_assets(definition, instance, prefix)
     graphs = _expanded_internal_graphs(definition, prefix)
+    controls = _expanded_control_system(definition.controls, prefix)
     physical, signals = _binding_connections(definition, instance, prefix, target_prefix)
     graphs = _merge_expansion_graphs([
         graphs,
@@ -205,6 +326,7 @@ function _expand_instance(
     for owner in vcat(
         [record.identity.id for record in definition.records],
         _graph_element_ids(definition.internals),
+        _control_owner_ids(definition.controls),
     )
         push!(identities, ExpansionIdentity(prefix, owner, _scoped_id(prefix, owner)))
     end
@@ -214,6 +336,7 @@ function _expand_instance(
         append!(records, collect(expanded.records))
         append!(assets, collect(expanded.assets))
         graphs = _merge_expansion_graphs([graphs, expanded.graphs])
+        controls = _merge_control_systems([controls, expanded.controls])
         append!(identities, collect(expanded.identities))
     end
     sort!(identities; by = item -> item.expanded_owner.value)
@@ -222,6 +345,7 @@ function _expand_instance(
         CanonicalList{CanonicalRecord}(sort!(records; by = item -> item.identity.id.value)),
         CanonicalList{CanonicalAsset}(sort!(assets; by = item -> item.identity.id.value)),
         graphs,
+        controls,
         CanonicalList{ExpansionIdentity}(identities),
     )
 end
@@ -231,6 +355,7 @@ function expand_instance(project::CanonicalProject, instance::DefinitionInstance
     _validate_definition_instance(project, instance, project.graphs)
     expanded = _expand_instance(project, instance, instance.identity.id, nothing)
     combined_graphs = _merge_expansion_graphs([project.graphs, expanded.graphs])
+    combined_controls = _merge_control_systems([project.control_system, expanded.controls])
     temporary = unsafe_project(
         project.metadata,
         project.registry,
@@ -244,10 +369,13 @@ function expand_instance(project::CanonicalProject, instance::DefinitionInstance
             matrices = collect(project.asset_library.matrices),
             measurements = collect(project.asset_library.measurements),
         ),
+        project.hierarchy,
+        combined_controls,
     )
     foreach(record -> _validate_record(temporary, record), expanded.records)
     validate_graphs(temporary)
     validate_asset_library(temporary)
+    validate_control_system(temporary)
     return expanded
 end
 

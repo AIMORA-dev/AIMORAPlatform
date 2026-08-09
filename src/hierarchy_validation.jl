@@ -179,6 +179,8 @@ function _definition_temporary_project(project::CanonicalProject, definition::Re
         records,
         definition.internals,
         AssetLibrary(assets = collect(definition.assets)),
+        HierarchyModel(),
+        definition.controls,
     )
 end
 
@@ -211,6 +213,7 @@ function _validate_reusable_definition(project::CanonicalProject, definition::Re
     foreach(record -> _validate_record(temporary, record), temporary.records)
     validate_graphs(temporary)
     validate_asset_library(temporary)
+    validate_control_system(temporary)
     isempty(definition.internals.cross_references) ||
         _semantic_fail(:definition_cross_reference_unsupported, "definition cross references require explicit external bindings")
     isempty(definition.internals.view_projections) ||
@@ -268,6 +271,7 @@ function validate_hierarchy(project::CanonicalProject)
         [item.identity.id for item in project.asset_library.curves],
         [item.identity.id for item in project.asset_library.matrices],
         [item.identity.id for item in project.asset_library.measurements],
+        _control_owner_ids(project.control_system),
     ))
     isempty(intersect(semantic_ids, Set(instance_ids))) ||
         _semantic_fail(:instance_identity_collision, "instance ID collides with project semantics")

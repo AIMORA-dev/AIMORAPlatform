@@ -237,6 +237,7 @@ struct ReusableDefinition
     records::CanonicalList{DefinitionRecord}
     assets::CanonicalList{CanonicalAsset}
     internals::SemanticGraphs
+    controls::ControlSystem
     parameter_bindings::CanonicalList{DefinitionParameterBinding}
     nested_instances::CanonicalList{DefinitionInstance}
     property_metadata::CanonicalList{DefinitionPropertyMetadata}
@@ -257,6 +258,7 @@ struct ReusableDefinition
         nested_instances::AbstractVector{DefinitionInstance},
         provenance::ProvenanceSource;
         property_metadata::AbstractVector{DefinitionPropertyMetadata} = DefinitionPropertyMetadata[],
+        controls::ControlSystem = ControlSystem(),
         documentation::Union{Nothing,ArtifactIdentity} = nothing,
         default_view::Union{Nothing,ProjectReference} = nothing,
         report_providers::AbstractVector{SemanticTypeId} = SemanticTypeId[],
@@ -278,6 +280,7 @@ struct ReusableDefinition
             CanonicalList{DefinitionRecord}(record_copy),
             CanonicalList{CanonicalAsset}(asset_copy),
             internals,
+            controls,
             CanonicalList{DefinitionParameterBinding}(binding_copy),
             CanonicalList{DefinitionInstance}(nested_copy),
             CanonicalList{DefinitionPropertyMetadata}(metadata_copy),
@@ -293,7 +296,8 @@ Base.:(==)(left::ReusableDefinition, right::ReusableDefinition) =
     left.identity == right.identity && left.definition_type == right.definition_type &&
     left.parameters == right.parameters && left.external_ports == right.external_ports &&
     left.records == right.records && left.assets == right.assets &&
-    left.internals == right.internals && left.parameter_bindings == right.parameter_bindings &&
+    left.internals == right.internals && left.controls == right.controls &&
+    left.parameter_bindings == right.parameter_bindings &&
     left.nested_instances == right.nested_instances && left.property_metadata == right.property_metadata &&
     left.documentation == right.documentation &&
     left.default_view == right.default_view && left.report_providers == right.report_providers &&
