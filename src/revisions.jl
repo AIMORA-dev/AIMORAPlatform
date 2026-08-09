@@ -145,6 +145,7 @@ function _apply_patch(project::CanonicalProject, patch::AddRecordPatch)
         project.hierarchy,
         project.control_system,
         project.event_scenarios,
+        project.orchestration,
         ProjectUnverified,
     )
     return updated, _record_effect(patch.record.identity.id)
@@ -165,6 +166,7 @@ function _apply_patch(project::CanonicalProject, patch::RemoveRecordPatch)
         project.hierarchy,
         project.control_system,
         project.event_scenarios,
+        project.orchestration,
         ProjectUnverified,
     )
     return updated, _record_effect(patch.owner)
@@ -229,6 +231,7 @@ function _apply_patch(project::CanonicalProject, patch::UnsafeReplaceRecordsPatc
         project.hierarchy,
         project.control_system,
         project.event_scenarios,
+        project.orchestration,
     )
     owner = project.metadata.identity.id
     effect = CommandEffect(owner, DependencyInvalidation(owner, [InvalidateAllResults, InvalidateViews]))

@@ -115,7 +115,13 @@ function _validate_local_reference(project::CanonicalProject, reference::Project
         event_declaration(project.event_scenarios, id)
     elseif reference.kind == ReferenceScenario
         scenario_definition(project.event_scenarios, id)
-    elseif reference.kind in (ReferenceStudy, ReferenceWorkflow, ReferenceResult, ReferenceView)
+    elseif reference.kind == ReferenceStudy
+        study_request(project.orchestration, id)
+    elseif reference.kind == ReferenceWorkflow
+        workflow_definition(project.orchestration, id)
+    elseif reference.kind == ReferenceResult
+        result_declaration(project.orchestration, id)
+    elseif reference.kind == ReferenceView
         any(record -> record.identity.id == id, project.records) ||
             _semantic_fail(:dangling_cross_graph_reference, "typed cross-graph target record does not exist")
     else
@@ -129,6 +135,7 @@ function _validate_cross_reference(project::CanonicalProject, reference::CrossGr
         [record.identity.id for record in project.records],
         _graph_element_ids(project.graphs),
         [event.identity.id for event in project.event_scenarios.events],
+        _orchestration_owner_ids(project.orchestration),
     ))
     reference.source in semantic_ids ||
         _semantic_fail(:dangling_cross_graph_source, "cross-graph source does not exist")
@@ -179,9 +186,10 @@ function validate_graphs(project::CanonicalProject)
     end
     foreach(connection -> _validate_physical_connection(project, connection), graphs.physical_connections)
     foreach(connection -> _validate_signal_connection(project, connection), graphs.signal_connections)
-    workflow_vertices = ProjectId[collect(record_ids)...]
+    workflow_owner_ids = union(record_ids, Set(_orchestration_graph_owner_ids(project.orchestration)))
+    workflow_vertices = ProjectId[collect(workflow_owner_ids)...]
     workflow_edges = Tuple{ProjectId,ProjectId}[(edge.upstream, edge.downstream) for edge in graphs.workflow_dependencies]
-    all(edge -> edge.upstream in record_ids && edge.downstream in record_ids, graphs.workflow_dependencies) ||
+    all(edge -> edge.upstream in workflow_owner_ids && edge.downstream in workflow_owner_ids, graphs.workflow_dependencies) ||
         _semantic_fail(:dangling_workflow_dependency, "workflow dependency references a missing owner")
     _has_directed_cycle(workflow_vertices, workflow_edges) &&
         _semantic_fail(:workflow_cycle, "workflow dependency graph contains a cycle")
@@ -202,6 +210,7 @@ function validate_graphs(project::CanonicalProject)
         nonview_ids,
         Set(_control_owner_ids(project.control_system)),
         Set(_event_scenario_owner_ids(project.event_scenarios)),
+        Set(_orchestration_owner_ids(project.orchestration)),
     )
     for projection in graphs.view_projections
         projection.view in record_ids || _semantic_fail(:dangling_view_owner, "view projection references a missing view record")

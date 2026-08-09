@@ -336,6 +336,7 @@ function validate_event_scenario_model(project::CanonicalProject)
         [item.identity.id for item in project.asset_library.measurements],
         [item.identity.id for item in project.hierarchy.instances],
         _control_owner_ids(project.control_system),
+        _orchestration_owner_ids(project.orchestration),
     ))
     isempty(intersect(other_ids, Set(owner_ids))) ||
         _semantic_fail(:event_scenario_identity_collision, "event/scenario owner collides with other project semantics")

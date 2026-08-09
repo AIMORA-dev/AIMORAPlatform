@@ -103,7 +103,46 @@ function _project_without_scenarios(project::CanonicalProject)
         project.hierarchy,
         project.control_system,
         model,
+        project.orchestration,
         ProjectUnverified,
+    )
+end
+
+function _verified_materialized_scenario_project(
+    project::CanonicalProject,
+    source_project::CanonicalProject,
+)
+    foreach(record -> _validate_record(project, record), project.records)
+    validate_graphs(project)
+    validate_asset_library(project)
+    validate_hierarchy(project)
+    validate_control_system(project)
+    validate_event_scenario_model(project)
+    orchestration_context = unsafe_project(
+        project.metadata,
+        project.registry,
+        project.units,
+        collect(project.records),
+        project.graphs,
+        project.asset_library,
+        project.hierarchy,
+        project.control_system,
+        source_project.event_scenarios,
+        project.orchestration,
+    )
+    validate_orchestration(orchestration_context; scenario_source = source_project)
+    return CanonicalProject(
+        project.metadata,
+        project.registry,
+        project.units,
+        collect(project.records),
+        project.graphs,
+        project.asset_library,
+        project.hierarchy,
+        project.control_system,
+        project.event_scenarios,
+        project.orchestration,
+        ProjectVerified,
     )
 end
 
@@ -124,7 +163,7 @@ function _resolve_scenario(
         push!(commands, command)
         push!(effects, effect)
     end
-    resolved = verified_project(working)
+    resolved = _verified_materialized_scenario_project(working, project)
     return ResolvedScenario(
         id,
         CanonicalList{ProjectId}([scenario.identity.id for scenario in lineage]),

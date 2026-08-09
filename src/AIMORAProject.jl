@@ -444,6 +444,102 @@ export AbsoluteEventTrigger,
     scenario_definition,
     validate_event_scenario_model
 
+export AddExperimentDeclarationPatch,
+    AddResultContractPatch,
+    AddResultDeclarationPatch,
+    AddStudyRequestPatch,
+    AddStudyRequestSchemaPatch,
+    AddWorkflowDefinitionPatch,
+    BoundedIterationExperiment,
+    CalibrationExperiment,
+    CanonicalWorkflowInputSource,
+    ConstraintDeclaration,
+    DecisionContinuous,
+    DecisionDiscrete,
+    DecisionDomain,
+    DecisionInteger,
+    DecisionVariable,
+    ExistingResultSource,
+    ExperimentCachePolicy,
+    ExperimentCacheProhibited,
+    ExperimentCheckpoint,
+    ExperimentContinueIndependent,
+    ExperimentDeclaration,
+    ExperimentExecution,
+    ExperimentExecutionOrder,
+    ExperimentFailurePolicy,
+    ExperimentParallelDeterministic,
+    ExperimentPolicies,
+    ExperimentRecompute,
+    ExperimentSerial,
+    ExperimentSolverDeclaration,
+    ExperimentStoppingCriteria,
+    ExperimentStopOnFailure,
+    ExperimentTerminationAcceptBest,
+    ExperimentTerminationAction,
+    ExperimentTerminationError,
+    ExperimentTerminationReport,
+    ExperimentUseValidCache,
+    ObjectiveDeclaration,
+    ObjectiveMaximize,
+    ObjectiveMinimize,
+    ObjectiveSense,
+    OptimizationExperiment,
+    OrchestrationModel,
+    OrchestrationPatch,
+    ParameterSweepExperiment,
+    RegisteredFunctionIdentity,
+    RemoveExperimentDeclarationPatch,
+    RemoveResultContractPatch,
+    RemoveResultDeclarationPatch,
+    RemoveStudyRequestPatch,
+    RemoveStudyRequestSchemaPatch,
+    RemoveWorkflowDefinitionPatch,
+    ReplaceExperimentDeclarationPatch,
+    ReplaceResultContractPatch,
+    ReplaceResultDeclarationPatch,
+    ReplaceStudyRequestPatch,
+    ReplaceStudyRequestSchemaPatch,
+    ReplaceWorkflowDefinitionPatch,
+    ResultContract,
+    ResultDeclaration,
+    ResultSelector,
+    StepResultSource,
+    StudyMethodDeclaration,
+    StudyOptionalDataIgnore,
+    StudyOptionalDataPolicy,
+    StudyOptionalDataWarning,
+    StudyOutputRequest,
+    StudyOutsideDomainError,
+    StudyOutsideDomainPolicy,
+    StudyOutsideDomainWarning,
+    StudyPrerequisite,
+    StudyRequest,
+    StudyRequestSchema,
+    StudyValidityPolicy,
+    UncertainInput,
+    UncertaintyExperiment,
+    WorkflowCachePolicy,
+    WorkflowCacheProhibited,
+    WorkflowContinueIndependent,
+    WorkflowDefinition,
+    WorkflowFailurePolicy,
+    WorkflowInputBinding,
+    WorkflowInputSource,
+    WorkflowRecompute,
+    WorkflowSkipDependents,
+    WorkflowStep,
+    WorkflowStopOnFailure,
+    WorkflowUseValidCache,
+    experiment_declaration,
+    result_contract,
+    result_declaration,
+    study_request,
+    study_request_hash,
+    study_schema,
+    validate_orchestration,
+    workflow_definition
+
 include("identities.jl")
 include("quantities.jl")
 include("provenance.jl")
@@ -455,6 +551,10 @@ include("control_types.jl")
 include("hierarchy_types.jl")
 include("patch_types.jl")
 include("event_scenario_types.jl")
+include("study_types.jl")
+include("workflow_types.jl")
+include("experiment_types.jl")
+include("orchestration_types.jl")
 include("project_records.jl")
 include("graph_validation.jl")
 include("asset_validation.jl")
@@ -467,8 +567,10 @@ include("asset_patches.jl")
 include("hierarchy_patches.jl")
 include("control_patches.jl")
 include("event_scenario_patches.jl")
+include("orchestration_patches.jl")
 include("scenario_resolution.jl")
 include("event_scenario_validation.jl")
+include("orchestration_validation.jl")
 include("transactions.jl")
 
 end
