@@ -301,6 +301,39 @@ export AccessConfidential,
     select_realization,
     validate_asset_library
 
+export AddDefinitionInstancePatch,
+    AddDefinitionMigrationPatch,
+    AddReusableDefinitionPatch,
+    DefinitionAssetCommonProperty,
+    DefinitionExternalPort,
+    DefinitionInstance,
+    DefinitionMigration,
+    DefinitionParameterBinding,
+    DefinitionParameterSpec,
+    DefinitionPropertyMetadata,
+    DefinitionRecord,
+    DefinitionRecordField,
+    ExpansionIdentity,
+    HierarchyModel,
+    InstanceExpansion,
+    InstanceParameterValue,
+    InstancePortBinding,
+    InstancePortTarget,
+    InstanceTargetNode,
+    InstanceTargetPort,
+    ParameterBindingTarget,
+    RemoveDefinitionInstancePatch,
+    RemoveDefinitionMigrationPatch,
+    RemoveReusableDefinitionPatch,
+    ReusableDefinition,
+    SetInstanceParameterPatch,
+    UnsetInstanceParameterPatch,
+    definition_instance,
+    definition_migration,
+    expand_instance,
+    reusable_definition,
+    validate_hierarchy
+
 include("identities.jl")
 include("quantities.jl")
 include("provenance.jl")
@@ -308,12 +341,16 @@ include("schema_registry.jl")
 include("canonical_fields.jl")
 include("graph_types.jl")
 include("asset_types.jl")
+include("hierarchy_types.jl")
 include("project_records.jl")
 include("graph_validation.jl")
 include("asset_validation.jl")
+include("hierarchy_validation.jl")
+include("hierarchy_expansion.jl")
 include("revisions.jl")
 include("graph_patches.jl")
 include("asset_patches.jl")
+include("hierarchy_patches.jl")
 include("transactions.jl")
 
 end
