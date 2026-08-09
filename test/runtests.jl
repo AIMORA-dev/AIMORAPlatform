@@ -1031,3 +1031,5 @@ git-tree-sha1 = "$(repeat("a", 40))"
     @test !format_succeeded(limited)
     @test only(limited.diagnostics).code == :scalar_too_large
 end
+
+include("bulk_tables.jl")
