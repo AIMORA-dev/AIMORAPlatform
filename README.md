@@ -1,6 +1,8 @@
 # AIMORAProject.jl
 
-`AIMORAProject.jl` is the minimal public owner reserved for AIMORA's canonical open-text project model, typed revisions, transactions, commands, queries, provenance, and view metadata. This scaffold deliberately contains no solver and no speculative model API; existing AIMORA repositories remain canonical until an authorized migration packet moves an executable responsibility here.
+`AIMORAProject.jl` is the public owner for AIMORA's canonical semantic project model, typed revisions, transactions, commands, queries, provenance, and view metadata. It contains no solver, GUI toolkit, parser duplication, executable callback, or private runtime type; existing engine consumers remain canonical until an authorized migration moves them to this public boundary.
+
+The current primitive layer provides immutable project/global IDs, namespaces, typed local/external references and JSON Pointer paths, exact decimal/rational quantities, controlled unit/base/orientation conversion, provenance, licences, uncertainty, checksummed artifact identities, and a versioned callback-free semantic schema registry. Canonical physical values require provenance, quantity schemas require explicit dimensions and orientations, per-unit values require typed base references, schema and namespace collisions reject deterministically, and no schema field stores an arbitrary Julia value or hidden physical default. Run `julia --project=. examples/canonical_primitives.jl` for the public construction example.
 
 ## Licence
 
