@@ -1,5 +1,6 @@
 using Test
 using AIMORAFormats
+using SHA
 
 @testset "open-text format package boundary" begin
     @test nameof(AIMORAFormats) === :AIMORAFormats
@@ -195,10 +196,13 @@ function semantic_format_value(node::FormatNode)
         return (:sequence, map(semantic_format_value, collect(value.elements)))
     value isa FormatMapping && return (
         :mapping,
-        [
+        sort!(
+            [
             (entry.key.value.value, semantic_format_value(entry.value))
             for entry in value.entries
-        ],
+            ];
+            by = first,
+        ),
     )
     error("unknown test format value")
 end
@@ -446,4 +450,209 @@ end
     )
     @test !format_succeeded(limited_emission)
     @test only(limited_emission.diagnostics).code == :document_too_large
+end
+
+@testset "exact source-located JSON grammar" begin
+    text = """{
+  "project": {"id": "grid.α", "enabled": true},
+  "values": [null, false, 0, -0, 123456789012345678901234567890, 1.20e2],
+  "music": "\\uD834\\uDD1E"
+}
+"""
+    parsed = parse_json(text; source_name = "project.json")
+    @test format_succeeded(parsed)
+    @test isempty(parsed.diagnostics)
+    document = parsed.value
+    @test document.root.span.start == SourcePosition(1, 1, 1)
+    @test document.root.span.stop == SourcePosition(ncodeunits(text), 5, 2)
+    project = mapping_entry(document.root, "project").value
+    @test mapping_entry(project, "id").value.value == FormatString("grid.α")
+    @test mapping_entry(project, "enabled").value.value == FormatBoolean(true)
+    values = mapping_entry(document.root, "values").value.value.elements
+    @test values[1].value == FormatNull()
+    @test values[2].value == FormatBoolean(false)
+    @test values[3].value == FormatInteger(0)
+    @test values[4].value == FormatDecimal(0, 0; negative_zero = true)
+    @test values[5].value ==
+          FormatInteger(parse(BigInt, "123456789012345678901234567890"))
+    @test values[6].value == FormatDecimal(12, 1)
+    @test mapping_entry(document.root, "music").value.value == FormatString("𝄞")
+
+    bytes = Vector{UInt8}(codeunits(text))
+    @test parse_json(bytes; source_name = "project.json") == parsed
+    source = source_document(bytes; source_name = "project.json").value
+    @test parse_json(source) == parsed
+end
+
+@testset "canonical JSON normalization and content identity" begin
+    first_json = """{
+      "z": [1, -0, 1.20e2, "line\\nfeed"],
+      "a": {"Ω": true, "control": "\\u0001", "slash": "\\/"}
+    }"""
+    second_json =
+        "{\"a\":{\"slash\":\"/\",\"control\":\"\\u0001\",\"Ω\":true}," *
+        "\"z\":[1,-0.0,12e1,\"line\\nfeed\"]}"
+    yaml = """# syntax and order do not own canonical identity
+a:
+  slash: /
+  control: "\\u0001"
+  Ω: true
+z: [1, -0, 120.0, "line\\nfeed"]
+"""
+    first = parse_json(first_json; source_name = "first.json")
+    second = parse_json(second_json; source_name = "second.json")
+    authoring = parse_restricted_yaml(yaml; source_name = "project.aimora.yaml")
+    @test format_succeeded(first)
+    @test format_succeeded(second)
+    @test format_succeeded(authoring)
+
+    first_canonical = serialize_canonical_json(first.value)
+    second_canonical = serialize_canonical_json(second.value.root)
+    yaml_canonical = serialize_canonical_json(authoring.value)
+    @test format_succeeded(first_canonical)
+    @test first_canonical == second_canonical == yaml_canonical
+    @test first_canonical.value.media_type == "application/json"
+    canonical_text = String(collect(first_canonical.value.bytes))
+    @test canonical_text ==
+          "{\"a\":{\"control\":\"\\u0001\",\"slash\":\"/\",\"Ω\":true}," *
+          "\"z\":[1,-0e0,12e1,\"line\\nfeed\"]}"
+    reparsed = parse_json(collect(first_canonical.value.bytes))
+    @test format_succeeded(reparsed)
+    @test semantic_format_value(reparsed.value.root) ==
+          semantic_format_value(first.value.root)
+
+    first_hash = canonical_json_sha256(first.value)
+    second_hash = canonical_json_sha256(second.value.root)
+    yaml_hash = canonical_json_sha256(authoring.value)
+    @test format_succeeded(first_hash)
+    @test first_hash == second_hash == yaml_hash
+    @test occursin(r"^[0-9a-f]{64}$", first_hash.value)
+    @test bytes2hex(SHA.sha256(collect(first_canonical.value.bytes))) == first_hash.value
+
+    changed_value = parse_json("{\"a\": 2}")
+    original_value = parse_json("{\"a\": 1}")
+    reordered_array = parse_json("[2, 1]")
+    original_array = parse_json("[1, 2]")
+    @test canonical_json_sha256(changed_value.value).value !=
+          canonical_json_sha256(original_value.value).value
+    @test canonical_json_sha256(reordered_array.value).value !=
+          canonical_json_sha256(original_array.value).value
+    @test canonical_json_sha256(parse_json("0").value).value !=
+          canonical_json_sha256(parse_json("0.0").value).value
+    @test canonical_json_sha256(parse_json("0.0").value).value !=
+          canonical_json_sha256(parse_json("-0.0").value).value
+end
+
+@testset "canonical JSON Unicode order and fresh-process stability" begin
+    parsed = parse_json("{\"😀\":4,\"Ω\":3,\"a\":2,\"Z\":1}")
+    canonical = serialize_canonical_json(parsed.value)
+    @test String(collect(canonical.value.bytes)) ==
+          "{\"Z\":1,\"a\":2,\"Ω\":3,\"😀\":4}"
+
+    package_root = pkgdir(AIMORAFormats)
+    child_script = """
+    using AIMORAFormats
+    parsed = parse_json("{\\\"z\\\":2,\\\"a\\\":[-0,1.0]}")
+    canonical = serialize_canonical_json(parsed.value)
+    print(String(collect(canonical.value.bytes)))
+    """
+    child_command = `$(Base.julia_cmd()) --startup-file=no`
+    child_command = `$child_command --project=$(package_root) -e $(child_script)`
+    @test read(child_command, String) == read(child_command, String) ==
+          "{\"a\":[-0e0,1e0],\"z\":2}"
+end
+
+@testset "JSON adversarial diagnostics" begin
+    failures = [
+        ("", :missing_json_value, 1, 1),
+        ("{\"a\":1,\"a\":2}", :duplicate_json_key, 1, 8),
+        ("{\"a\":1,\"\\u0061\":2}", :duplicate_json_key, 1, 8),
+        ("{a:1}", :json_key_must_be_string, 1, 2),
+        ("{\"a\" 1}", :missing_json_colon, 1, 6),
+        ("[1,]", :json_trailing_comma, 1, 4),
+        ("{\"a\":1,}", :json_trailing_comma, 1, 8),
+        ("{\"a\": // comment\n1}", :json_comment_prohibited, 1, 7),
+        ("NaN", :invalid_json_token, 1, 1),
+        ("True", :invalid_json_token, 1, 1),
+        ("+1", :invalid_json_token, 1, 1),
+        ("01", :invalid_json_number, 1, 1),
+        ("1.", :invalid_json_number, 1, 1),
+        ("1e", :invalid_json_number, 1, 1),
+        ("truex", :invalid_json_literal, 1, 5),
+        ("true false", :trailing_json_content, 1, 6),
+        ("\"\\x\"", :invalid_json_escape, 1, 2),
+        ("\"\\uD800\"", :invalid_json_unicode, 1, 2),
+        ("\"\\uDC00\"", :invalid_json_unicode, 1, 2),
+        ("\"a\nb\"", :invalid_json_control_character, 1, 3),
+        ("[1 2]", :missing_json_separator, 1, 4),
+        ("{\"a\":1 \"b\":2}", :missing_json_separator, 1, 8),
+    ]
+    for (text, code, line, column) in failures
+        result = parse_json(text; source_name = "bad.json")
+        @test !format_succeeded(result)
+        @test isnothing(result.value)
+        diagnostic = only(result.diagnostics)
+        @test diagnostic.code == code
+        @test diagnostic.span.source_name == "bad.json"
+        @test diagnostic.span.start.line == line
+        @test diagnostic.span.start.column == column
+    end
+
+    bom = parse_json(UInt8[0xef, 0xbb, 0xbf, 0x6e, 0x75, 0x6c, 0x6c])
+    @test !format_succeeded(bom)
+    @test only(bom.diagnostics).code == :json_byte_order_mark_prohibited
+    invalid_utf8 = parse_json(UInt8[0x22, 0x80, 0x22])
+    @test !format_succeeded(invalid_utf8)
+    @test only(invalid_utf8.diagnostics).code == :invalid_utf8
+end
+
+@testset "JSON and canonicalization resource limits" begin
+    oversized = parse_json(
+        "{\"a\":1}";
+        policy = FormatInputPolicy(max_document_bytes = 4),
+    )
+    @test !format_succeeded(oversized)
+    @test only(oversized.diagnostics).code == :document_too_large
+
+    scalar = parse_json(
+        "\"abcdef\"";
+        policy = FormatInputPolicy(max_scalar_bytes = 4),
+    )
+    @test !format_succeeded(scalar)
+    @test only(scalar.diagnostics).code == :scalar_too_large
+
+    collection = parse_json(
+        "{\"a\":[1,2,3]}";
+        policy = FormatInputPolicy(max_collection_items = 3),
+    )
+    @test !format_succeeded(collection)
+    @test only(collection.diagnostics).code == :collection_too_large
+
+    depth = parse_json(
+        "[[[1]]]";
+        policy = FormatInputPolicy(max_nesting_depth = 3),
+    )
+    @test !format_succeeded(depth)
+    @test only(depth.diagnostics).code == :nesting_too_deep
+
+    parsed = parse_json("{\"a\":1}")
+    limited = serialize_canonical_json(
+        parsed.value;
+        policy = FormatInputPolicy(max_document_bytes = 4),
+    )
+    @test !format_succeeded(limited)
+    @test only(limited.diagnostics).code == :document_too_large
+    limited_hash = canonical_json_sha256(
+        parsed.value;
+        policy = FormatInputPolicy(max_document_bytes = 4),
+    )
+    @test !format_succeeded(limited_hash)
+    @test only(limited_hash.diagnostics).code == :document_too_large
+
+    invalid_string = String(UInt8[0xff])
+    span = parsed.value.root.span
+    invalid_node = FormatNode(FormatString(invalid_string), span)
+    invalid_serialization = serialize_canonical_json(invalid_node)
+    @test !format_succeeded(invalid_serialization)
+    @test only(invalid_serialization.diagnostics).code == :invalid_unicode_value
 end

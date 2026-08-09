@@ -29,8 +29,11 @@ export DiagnosticError,
     SourceDocument,
     SourcePosition,
     SourceSpan,
+    canonical_json_sha256,
     format_succeeded,
+    parse_json,
     parse_restricted_yaml,
+    serialize_canonical_json,
     serialize_restricted_yaml,
     source_bytes,
     source_document,
@@ -43,5 +46,6 @@ export DiagnosticError,
 include("source_documents.jl")
 include("format_values.jl")
 include("restricted_yaml.jl")
+include("canonical_json.jl")
 
 end
