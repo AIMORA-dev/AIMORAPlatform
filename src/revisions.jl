@@ -51,8 +51,6 @@ end
 Base.:(==)(left::CommandEffect, right::CommandEffect) =
     left.changed_owner == right.changed_owner && left.invalidation == right.invalidation
 
-abstract type ProjectPatch end
-
 struct AddRecordPatch <: ProjectPatch
     record::CanonicalRecord
 end
@@ -146,6 +144,7 @@ function _apply_patch(project::CanonicalProject, patch::AddRecordPatch)
         project.asset_library,
         project.hierarchy,
         project.control_system,
+        project.event_scenarios,
         ProjectUnverified,
     )
     return updated, _record_effect(patch.record.identity.id)
@@ -165,6 +164,7 @@ function _apply_patch(project::CanonicalProject, patch::RemoveRecordPatch)
         project.asset_library,
         project.hierarchy,
         project.control_system,
+        project.event_scenarios,
         ProjectUnverified,
     )
     return updated, _record_effect(patch.owner)
@@ -228,6 +228,7 @@ function _apply_patch(project::CanonicalProject, patch::UnsafeReplaceRecordsPatc
         project.asset_library,
         project.hierarchy,
         project.control_system,
+        project.event_scenarios,
     )
     owner = project.metadata.identity.id
     effect = CommandEffect(owner, DependencyInvalidation(owner, [InvalidateAllResults, InvalidateViews]))

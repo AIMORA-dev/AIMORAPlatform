@@ -108,7 +108,14 @@ function _validate_local_reference(project::CanonicalProject, reference::Project
     elseif reference.kind == ReferenceAsset
         _asset_or_record_exists(project, id) ||
             _semantic_fail(:dangling_cross_graph_reference, "typed asset target does not exist")
-    elseif reference.kind in (ReferenceControlBlock, ReferenceEvent, ReferenceStudy, ReferenceWorkflow, ReferenceResult, ReferenceView)
+    elseif reference.kind == ReferenceControlBlock
+        id in Set(_control_owner_ids(project.control_system)) ||
+            _semantic_fail(:dangling_cross_graph_reference, "typed control target does not exist")
+    elseif reference.kind == ReferenceEvent
+        event_declaration(project.event_scenarios, id)
+    elseif reference.kind == ReferenceScenario
+        scenario_definition(project.event_scenarios, id)
+    elseif reference.kind in (ReferenceStudy, ReferenceWorkflow, ReferenceResult, ReferenceView)
         any(record -> record.identity.id == id, project.records) ||
             _semantic_fail(:dangling_cross_graph_reference, "typed cross-graph target record does not exist")
     else
@@ -121,6 +128,7 @@ function _validate_cross_reference(project::CanonicalProject, reference::CrossGr
     semantic_ids = Set(vcat(
         [record.identity.id for record in project.records],
         _graph_element_ids(project.graphs),
+        [event.identity.id for event in project.event_scenarios.events],
     ))
     reference.source in semantic_ids ||
         _semantic_fail(:dangling_cross_graph_source, "cross-graph source does not exist")
@@ -189,7 +197,12 @@ function validate_graphs(project::CanonicalProject)
     ), element in collection
         push!(nonview_ids, element.identity.id)
     end
-    semantic_owners = union(port_owner_ids, nonview_ids, Set(_control_owner_ids(project.control_system)))
+    semantic_owners = union(
+        port_owner_ids,
+        nonview_ids,
+        Set(_control_owner_ids(project.control_system)),
+        Set(_event_scenario_owner_ids(project.event_scenarios)),
+    )
     for projection in graphs.view_projections
         projection.view in record_ids || _semantic_fail(:dangling_view_owner, "view projection references a missing view record")
         projection.semantic_owner in semantic_owners ||

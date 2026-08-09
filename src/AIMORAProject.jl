@@ -395,6 +395,55 @@ export AddControlBlockSchemaPatch,
     control_network,
     validate_control_system
 
+export AbsoluteEventTrigger,
+    AddEventDeclarationPatch,
+    AddScenarioDefinitionPatch,
+    CanonicalEventTrigger,
+    ConditionEventTrigger,
+    EventAnyDirection,
+    EventDeclaration,
+    EventDirection,
+    EventFallingDirection,
+    EventResetAssign,
+    EventResetDeclaration,
+    EventResetMode,
+    EventResetReinitialize,
+    EventResetRelease,
+    EventRisingDirection,
+    EventRollbackPolicy,
+    EventRollbackProhibited,
+    EventRollbackReplayDeterministically,
+    EventRollbackRestoreAccepted,
+    EventScenarioModel,
+    EventTrigger,
+    RelativeEventTrigger,
+    RemoveEventDeclarationPatch,
+    RemoveScenarioDefinitionPatch,
+    ReplaceEventDeclarationPatch,
+    ReplaceScenarioDefinitionPatch,
+    ResolvedScenario,
+    SampledEventTrigger,
+    ScenarioAdd,
+    ScenarioConnect,
+    ScenarioDefinition,
+    ScenarioDisable,
+    ScenarioDisconnect,
+    ScenarioEnable,
+    ScenarioOperation,
+    ScenarioPatchDeclaration,
+    ScenarioRemove,
+    ScenarioReplaceProfile,
+    ScenarioReplaceRealization,
+    ScenarioSet,
+    ScenarioUnset,
+    SetEventEnabledPatch,
+    event_declaration,
+    ordered_events,
+    resolve_scenario,
+    scenario_content_hash,
+    scenario_definition,
+    validate_event_scenario_model
+
 include("identities.jl")
 include("quantities.jl")
 include("provenance.jl")
@@ -404,6 +453,8 @@ include("graph_types.jl")
 include("asset_types.jl")
 include("control_types.jl")
 include("hierarchy_types.jl")
+include("patch_types.jl")
+include("event_scenario_types.jl")
 include("project_records.jl")
 include("graph_validation.jl")
 include("asset_validation.jl")
@@ -415,6 +466,9 @@ include("graph_patches.jl")
 include("asset_patches.jl")
 include("hierarchy_patches.jl")
 include("control_patches.jl")
+include("event_scenario_patches.jl")
+include("scenario_resolution.jl")
+include("event_scenario_validation.jl")
 include("transactions.jl")
 
 end

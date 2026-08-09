@@ -83,6 +83,7 @@ struct CanonicalProject
     asset_library::AssetLibrary
     hierarchy::HierarchyModel
     control_system::ControlSystem
+    event_scenarios::EventScenarioModel
     verification::ProjectVerificationState
 
     function CanonicalProject(
@@ -94,6 +95,7 @@ struct CanonicalProject
         asset_library::AssetLibrary,
         hierarchy::HierarchyModel,
         control_system::ControlSystem,
+        event_scenarios::EventScenarioModel,
         verification::ProjectVerificationState,
     )
         copied = sort!(collect(records); by = record -> record.identity.id.value)
@@ -109,6 +111,7 @@ struct CanonicalProject
             asset_library,
             hierarchy,
             control_system,
+            event_scenarios,
             verification,
         )
     end
@@ -120,7 +123,7 @@ CanonicalProject(
     units::UnitRegistry,
     records::AbstractVector{CanonicalRecord},
     verification::ProjectVerificationState,
-) = CanonicalProject(metadata, registry, units, records, SemanticGraphs(), AssetLibrary(), HierarchyModel(), ControlSystem(), verification)
+) = CanonicalProject(metadata, registry, units, records, SemanticGraphs(), AssetLibrary(), HierarchyModel(), ControlSystem(), EventScenarioModel(), verification)
 
 CanonicalProject(
     metadata::ProjectMetadata,
@@ -129,7 +132,7 @@ CanonicalProject(
     records::AbstractVector{CanonicalRecord},
     graphs::SemanticGraphs,
     verification::ProjectVerificationState,
-) = CanonicalProject(metadata, registry, units, records, graphs, AssetLibrary(), HierarchyModel(), ControlSystem(), verification)
+) = CanonicalProject(metadata, registry, units, records, graphs, AssetLibrary(), HierarchyModel(), ControlSystem(), EventScenarioModel(), verification)
 
 CanonicalProject(
     metadata::ProjectMetadata,
@@ -139,7 +142,7 @@ CanonicalProject(
     graphs::SemanticGraphs,
     asset_library::AssetLibrary,
     verification::ProjectVerificationState,
-) = CanonicalProject(metadata, registry, units, records, graphs, asset_library, HierarchyModel(), ControlSystem(), verification)
+) = CanonicalProject(metadata, registry, units, records, graphs, asset_library, HierarchyModel(), ControlSystem(), EventScenarioModel(), verification)
 
 CanonicalProject(
     metadata::ProjectMetadata,
@@ -150,7 +153,19 @@ CanonicalProject(
     asset_library::AssetLibrary,
     hierarchy::HierarchyModel,
     verification::ProjectVerificationState,
-) = CanonicalProject(metadata, registry, units, records, graphs, asset_library, hierarchy, ControlSystem(), verification)
+) = CanonicalProject(metadata, registry, units, records, graphs, asset_library, hierarchy, ControlSystem(), EventScenarioModel(), verification)
+
+CanonicalProject(
+    metadata::ProjectMetadata,
+    registry::SemanticSchemaRegistry,
+    units::UnitRegistry,
+    records::AbstractVector{CanonicalRecord},
+    graphs::SemanticGraphs,
+    asset_library::AssetLibrary,
+    hierarchy::HierarchyModel,
+    control_system::ControlSystem,
+    verification::ProjectVerificationState,
+) = CanonicalProject(metadata, registry, units, records, graphs, asset_library, hierarchy, control_system, EventScenarioModel(), verification)
 
 Base.:(==)(left::CanonicalProject, right::CanonicalProject) =
     left.metadata == right.metadata &&
@@ -161,6 +176,7 @@ Base.:(==)(left::CanonicalProject, right::CanonicalProject) =
     left.asset_library == right.asset_library &&
     left.hierarchy == right.hierarchy &&
     left.control_system == right.control_system &&
+    left.event_scenarios == right.event_scenarios &&
     left.verification == right.verification
 
 function _validate_record(project::CanonicalProject, record::CanonicalRecord)
@@ -192,6 +208,7 @@ function validate_project(project::CanonicalProject)
     validate_asset_library(project)
     validate_hierarchy(project)
     validate_control_system(project)
+    validate_event_scenario_model(project)
     return true
 end
 
@@ -208,6 +225,7 @@ function verified_project(project::CanonicalProject)
         project.asset_library,
         project.hierarchy,
         project.control_system,
+        project.event_scenarios,
         ProjectVerified,
     )
 end
@@ -222,7 +240,8 @@ unsafe_project(
     asset_library::AssetLibrary = AssetLibrary(),
     hierarchy::HierarchyModel = HierarchyModel(),
     control_system::ControlSystem = ControlSystem(),
-) = CanonicalProject(metadata, registry, units, records, graphs, asset_library, hierarchy, control_system, ProjectUnverified)
+    event_scenarios::EventScenarioModel = EventScenarioModel(),
+) = CanonicalProject(metadata, registry, units, records, graphs, asset_library, hierarchy, control_system, event_scenarios, ProjectUnverified)
 
 function CanonicalProject(
     metadata::ProjectMetadata,
@@ -233,8 +252,9 @@ function CanonicalProject(
     asset_library::AssetLibrary = AssetLibrary(),
     hierarchy::HierarchyModel = HierarchyModel(),
     control_system::ControlSystem = ControlSystem(),
+    event_scenarios::EventScenarioModel = EventScenarioModel(),
 )
-    return verified_project(unsafe_project(metadata, registry, units, records, graphs, asset_library, hierarchy, control_system))
+    return verified_project(unsafe_project(metadata, registry, units, records, graphs, asset_library, hierarchy, control_system, event_scenarios))
 end
 
 function project_record(project::CanonicalProject, id::ProjectId)
@@ -257,6 +277,7 @@ function _replace_project_record(project::CanonicalProject, replacement::Canonic
         project.asset_library,
         project.hierarchy,
         project.control_system,
+        project.event_scenarios,
         ProjectUnverified,
     )
 end
@@ -271,6 +292,7 @@ function _replace_project_metadata(project::CanonicalProject, metadata::ProjectM
         project.asset_library,
         project.hierarchy,
         project.control_system,
+        project.event_scenarios,
         ProjectUnverified,
     )
 end
@@ -285,6 +307,7 @@ function _replace_project_graphs(project::CanonicalProject, graphs::SemanticGrap
         project.asset_library,
         project.hierarchy,
         project.control_system,
+        project.event_scenarios,
         ProjectUnverified,
     )
 end
@@ -299,6 +322,7 @@ function _replace_asset_library(project::CanonicalProject, asset_library::AssetL
         asset_library,
         project.hierarchy,
         project.control_system,
+        project.event_scenarios,
         ProjectUnverified,
     )
 end
@@ -313,6 +337,7 @@ function _replace_hierarchy(project::CanonicalProject, hierarchy::HierarchyModel
         project.asset_library,
         hierarchy,
         project.control_system,
+        project.event_scenarios,
         ProjectUnverified,
     )
 end
@@ -327,6 +352,22 @@ function _replace_control_system(project::CanonicalProject, control_system::Cont
         project.asset_library,
         project.hierarchy,
         control_system,
+        project.event_scenarios,
+        ProjectUnverified,
+    )
+end
+
+function _replace_event_scenarios(project::CanonicalProject, event_scenarios::EventScenarioModel)
+    return CanonicalProject(
+        project.metadata,
+        project.registry,
+        project.units,
+        collect(project.records),
+        project.graphs,
+        project.asset_library,
+        project.hierarchy,
+        project.control_system,
+        event_scenarios,
         ProjectUnverified,
     )
 end

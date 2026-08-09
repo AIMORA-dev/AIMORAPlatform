@@ -274,6 +274,23 @@ end
         AddControlNetworkPatch,
         RemoveControlNetworkPatch,
         ReplaceControlNetworkPatch,
+        RelativeEventTrigger,
+        AbsoluteEventTrigger,
+        SampledEventTrigger,
+        ConditionEventTrigger,
+        EventResetDeclaration,
+        EventDeclaration,
+        ScenarioPatchDeclaration,
+        ScenarioDefinition,
+        EventScenarioModel,
+        AddEventDeclarationPatch,
+        RemoveEventDeclarationPatch,
+        ReplaceEventDeclarationPatch,
+        SetEventEnabledPatch,
+        AddScenarioDefinitionPatch,
+        RemoveScenarioDefinitionPatch,
+        ReplaceScenarioDefinitionPatch,
+        ResolvedScenario,
     ]
     for canonical_type in canonical_types
         @test all(field_type -> field_type != Any, fieldtypes(canonical_type))
