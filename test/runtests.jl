@@ -1035,3 +1035,5 @@ end
 include("bulk_tables.jl")
 include("structural_schemas.jl")
 include("migrations.jl")
+include("inert_envelopes.jl")
+include("restricted_expressions.jl")
