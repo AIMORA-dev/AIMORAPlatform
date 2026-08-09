@@ -30,6 +30,8 @@ export DiagnosticError,
     SourcePosition,
     SourceSpan,
     format_succeeded,
+    parse_restricted_yaml,
+    serialize_restricted_yaml,
     source_bytes,
     source_document,
     source_position,
@@ -40,5 +42,6 @@ export DiagnosticError,
 
 include("source_documents.jl")
 include("format_values.jl")
+include("restricted_yaml.jl")
 
 end

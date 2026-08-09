@@ -34,25 +34,33 @@ Base.:(==)(left::FormatInteger, right::FormatInteger) = left.value == right.valu
 struct FormatDecimal <: FormatValue
     coefficient::BigInt
     exponent::Int
+    negative_zero::Bool
 
-    function FormatDecimal(coefficient::Integer, exponent::Integer)
+    function FormatDecimal(
+        coefficient::Integer,
+        exponent::Integer;
+        negative_zero::Bool = false,
+    )
         normalized_coefficient = BigInt(coefficient)
         normalized_exponent = Int(exponent)
         if iszero(normalized_coefficient)
-            return new(BigInt(0), 0)
+            return new(BigInt(0), 0, negative_zero)
         end
+        negative_zero && throw(ArgumentError("only a zero decimal can retain a negative-zero sign"))
         while iszero(rem(normalized_coefficient, 10))
             normalized_coefficient = div(normalized_coefficient, 10)
             normalized_exponent == typemax(Int) &&
                 throw(OverflowError("decimal exponent exceeds Int"))
             normalized_exponent += 1
         end
-        return new(normalized_coefficient, normalized_exponent)
+        return new(normalized_coefficient, normalized_exponent, false)
     end
 end
 
 Base.:(==)(left::FormatDecimal, right::FormatDecimal) =
-    left.coefficient == right.coefficient && left.exponent == right.exponent
+    left.coefficient == right.coefficient &&
+    left.exponent == right.exponent &&
+    left.negative_zero == right.negative_zero
 
 """A Unicode string retained without implicit date, unit, or boolean conversion."""
 struct FormatString <: FormatValue
@@ -141,7 +149,9 @@ function _format_scalar_size(value::FormatValue)
     value isa FormatString && return ncodeunits(value.value)
     value isa FormatInteger && return ncodeunits(string(value.value))
     value isa FormatDecimal &&
-        return ncodeunits(string(value.coefficient)) + ncodeunits(string(value.exponent)) + 1
+        return ncodeunits(string(value.coefficient)) +
+               ncodeunits(string(value.exponent)) +
+               (value.negative_zero ? 2 : 1)
     return 0
 end
 
