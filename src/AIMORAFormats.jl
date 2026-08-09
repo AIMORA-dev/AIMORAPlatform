@@ -4,6 +4,7 @@ module AIMORAFormats
 using SHA
 using TOML
 using UUIDs
+using Unicode
 
 export ArtifactEnvelope,
     DiagnosticError,
@@ -134,6 +135,24 @@ export ArtifactEnvelope,
     PatchReplaceRealization,
     PatchSet,
     PatchUnset,
+    ProjectArtifactResource,
+    ProjectAuthoritativeDocument,
+    ProjectAuthoritativeResource,
+    ProjectChecksumManifest,
+    ProjectChecksumRecord,
+    ProjectCompactSource,
+    ProjectChecksumResource,
+    ProjectDerivedResource,
+    ProjectDirectorySource,
+    ProjectDocumentRecord,
+    ProjectDocumentationResource,
+    ProjectFileRecord,
+    ProjectFileRole,
+    ProjectImportResource,
+    ProjectResolutionPolicy,
+    ProjectResolutionResult,
+    ProjectSourceKind,
+    ResolvedProjectDocuments,
     ParsedFormatLock,
     ParsedFormatDocument,
     ParsedBulkTable,
@@ -187,6 +206,7 @@ export ArtifactEnvelope,
     parse_registered_function_identity,
     parse_restricted_expression,
     parse_restricted_yaml,
+    resolve_project_documents,
     schema_compatibility,
     serialize_canonical_json,
     serialize_format_lock,
@@ -200,6 +220,7 @@ export ArtifactEnvelope,
     serialize_registered_function_identity,
     serialize_restricted_expression,
     serialize_restricted_yaml,
+    serialize_compact_project,
     source_bytes,
     source_document,
     source_position,
@@ -225,5 +246,6 @@ include("structural_schemas.jl")
 include("migrations.jl")
 include("inert_envelopes.jl")
 include("restricted_expressions.jl")
+include("project_documents.jl")
 
 end
