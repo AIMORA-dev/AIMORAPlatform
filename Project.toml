@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Ahmed Elkholy <ahmed_elkholy@f-eng.tanta.edu.eg>"]
 license = "PolyForm-Noncommercial-1.0.0"
 
+[deps]
+SHA = "ea8e919c-243c-51af-8825-aaa63cd721ce"
+
 [compat]
 julia = "1.10"
 

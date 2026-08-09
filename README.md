@@ -1,6 +1,8 @@
 # AIMORAFormats.jl
 
-`AIMORAFormats.jl` is the minimal public owner reserved for restricted YAML, canonical JSON, TOML, CSV/JSONL, migrations, source maps, diagnostics, and legacy import adapters. It contains no solver construction and exposes no format implementation until an authorized migration gives it an executable consumer.
+`AIMORAFormats.jl` is the public Julia owner for restricted YAML, canonical JSON, TOML, CSV/JSONL, migrations, source maps, diagnostics, and admitted import adapters. It contains no solver construction.
+
+The current public foundation admits bounded UTF-8 source documents, exact byte/line/column spans, deterministic diagnostics, solver-independent located format values, and typed operation results. Restricted grammar parsers, canonical serializers, migrations, and adapters remain unavailable until their executable packets pass; repository presence does not imply support for those formats.
 
 ## Licence
 
