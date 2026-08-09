@@ -1033,3 +1033,5 @@ git-tree-sha1 = "$(repeat("a", 40))"
 end
 
 include("bulk_tables.jl")
+include("structural_schemas.jl")
+include("migrations.jl")
