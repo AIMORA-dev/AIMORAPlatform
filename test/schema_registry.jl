@@ -339,6 +339,13 @@ end
         AddExperimentDeclarationPatch,
         RemoveExperimentDeclarationPatch,
         ReplaceExperimentDeclarationPatch,
+        ExecutionDependencySignatures,
+        ProjectSemanticHashes,
+        ResultDependencySignature,
+        StudyReadinessReason,
+        StudyReadinessReport,
+        DependencyImpact,
+        LayerValidationResult,
     ]
     for canonical_type in canonical_types
         @test all(field_type -> field_type != Any, fieldtypes(canonical_type))

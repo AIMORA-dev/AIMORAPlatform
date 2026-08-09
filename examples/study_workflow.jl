@@ -20,11 +20,23 @@ rating = PhysicalValue(
     ScalarQuantity(parse_exact_decimal("100.0"), UnitId("MVA"), OrientationScalar),
     provenance,
 )
+realization = StudyRealization(
+    ProjectId("realization.bus_static"),
+    semantic_type("model.bus.static_phasor"),
+    StaticPhasor,
+    AverageValue,
+    ModelExecutable,
+    ModelQualified,
+    AssetProperty[],
+    DerivedAssetProperty[],
+    ValidityLimit[],
+    provenance,
+)
 asset = CanonicalAsset(
     record.identity,
     semantic_type("asset.bus"),
     [AssetProperty(FieldPath("nameplate.rating"), rating, provenance)],
-    StudyRealization[],
+    [realization],
     provenance,
 )
 metadata = ProjectMetadata(
@@ -162,4 +174,15 @@ project = CanonicalProject(
     ),
 )
 println("validated workflow ", workflow.identity.id.value, " with bounded sweep ", sweep.identity.id.value)
-(; project, study, workflow, sweep)
+hashes = project_semantic_hashes(
+    project,
+    ContentDigest(repeat("3", 64)),
+    ExecutionDependencySignatures(
+        ContentDigest(repeat("4", 64)),
+        ContentDigest(repeat("5", 64)),
+        ContentDigest(repeat("6", 64)),
+    ),
+)
+readiness = study_readiness(project, study.identity.id)
+println("physics hash ", hashes.physics.sha256, " readiness ", readiness.state)
+(; project, study, workflow, sweep, hashes, readiness)

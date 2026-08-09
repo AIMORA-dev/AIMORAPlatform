@@ -48,17 +48,7 @@ function _scenario_value_signature(value)
 end
 
 function _scenario_base_signature(project::CanonicalProject)
-    return join((
-        _scenario_value_signature(project.metadata),
-        _scenario_value_signature(project.registry),
-        _scenario_value_signature(project.units),
-        _scenario_value_signature(project.records),
-        _scenario_value_signature(project.graphs),
-        _scenario_value_signature(project.asset_library),
-        _scenario_value_signature(project.hierarchy),
-        _scenario_value_signature(project.control_system),
-        _scenario_value_signature(project.event_scenarios.events),
-    ), '\n')
+    return semantic_canonical_form(project, HashPhysicalModel)
 end
 
 """Return the deterministic content identity of one resolved scenario lineage and patch payload."""

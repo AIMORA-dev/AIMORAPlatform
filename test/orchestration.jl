@@ -367,6 +367,7 @@ const ORCHESTRATION_FIXTURE = orchestration_fixture()
     example = Base.include(example_module, joinpath(@__DIR__, "..", "examples", "study_workflow.jl"))
     @test example.project.verification == ProjectVerified
     @test length(example.project.orchestration.experiments) == 1
+    @test example.readiness.state == StudyReady
     @test validate_orchestration(fixture.project)
     @test study_request(fixture.project.orchestration, fixture.emt.identity.id) == fixture.emt
     @test result_declaration(fixture.project.orchestration, fixture.accepted_power_flow.identity.id) == fixture.accepted_power_flow

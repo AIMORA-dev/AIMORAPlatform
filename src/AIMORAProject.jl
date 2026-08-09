@@ -540,6 +540,59 @@ export AddExperimentDeclarationPatch,
     validate_orchestration,
     workflow_definition
 
+export AutomaticPrerequisitePending,
+    DependencyImpact,
+    ExecutionDependencySignatures,
+    HashPhysicalModel,
+    HashResolvedProject,
+    HashViewModel,
+    MissingExactRealization,
+    MissingOptionalInitialization,
+    MissingOptionalSetting,
+    MissingPrerequisiteResult,
+    MissingRequiredInitialization,
+    MissingRequiredSetting,
+    MissingStudySchema,
+    ProjectSemanticHashes,
+    ProjectValidationLayer,
+    ReadinessBlocker,
+    ReadinessInformation,
+    ReadinessSeverity,
+    ReadinessWarning,
+    RealizationNotExecutable,
+    RealizationNotQualified,
+    ResultDependencySignature,
+    SemanticHashLayer,
+    StalePrerequisiteResult,
+    StudyBlocked,
+    StudyReadinessCode,
+    StudyReadinessReason,
+    StudyReadinessReport,
+    StudyReadinessState,
+    StudyReady,
+    StudyReadyWithWarnings,
+    UnsupportedStudyFidelity,
+    UnsupportedStudyRepresentation,
+    dependency_impact,
+    LayerValidationResult,
+    missing_requirements,
+    project_physics_hash,
+    project_resolved_hash,
+    project_semantic_hashes,
+    project_view_hash,
+    result_dependency_hash,
+    result_dependency_signature,
+    semantic_canonical_form,
+    study_readiness,
+    validate_project_layers,
+    ValidationAssetsRealizations,
+    ValidationEventsScenarios,
+    ValidationHierarchyControls,
+    ValidationIdentitySchema,
+    ValidationReferencesTopology,
+    ValidationStudiesWorkflows,
+    without_result_cache
+
 include("identities.jl")
 include("quantities.jl")
 include("provenance.jl")
@@ -571,6 +624,10 @@ include("orchestration_patches.jl")
 include("scenario_resolution.jl")
 include("event_scenario_validation.jl")
 include("orchestration_validation.jl")
+include("semantic_hashes.jl")
+include("study_readiness.jl")
+include("dependency_analysis.jl")
+include("layered_validation.jl")
 include("transactions.jl")
 
 end
