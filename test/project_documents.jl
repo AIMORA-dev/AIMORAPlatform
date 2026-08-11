@@ -368,7 +368,13 @@ end
             for path in paths
                 write_project_test_file(directory, path, "{value: 1}\n")
             end
-            project_resolution_failure(directory, :project_path_collision)
+            stored_names = readdir(joinpath(directory, "model"))
+            if length(stored_names) == length(paths)
+                project_resolution_failure(directory, :project_path_collision)
+            else
+                @test length(stored_names) == 1
+                project_resolution_failure(directory, :unowned_authoritative_document)
+            end
         end
     end
 
