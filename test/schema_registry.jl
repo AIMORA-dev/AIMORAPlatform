@@ -346,6 +346,10 @@ end
         StudyReadinessReport,
         DependencyImpact,
         LayerValidationResult,
+        ProjectRecordHandle,
+        RecordTable,
+        AssetTable,
+        ProjectImportApplication,
     ]
     for canonical_type in canonical_types
         @test all(field_type -> field_type != Any, fieldtypes(canonical_type))

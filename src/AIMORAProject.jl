@@ -4,6 +4,8 @@ module AIMORAProject
 using Dates
 using SHA
 using UUIDs
+using AIMORAFormats
+import Tables
 
 export AllowedStringConstraint,
     AddGraphElementPatch,
@@ -593,6 +595,46 @@ export AutomaticPrerequisitePending,
     ValidationStudiesWorkflows,
     without_result_cache
 
+export AssetTable,
+    AssetTableEditBuffer,
+    ProjectBuilder,
+    ProjectRecordHandle,
+    RecordTable,
+    RecordTableEditBuffer,
+    add_record!,
+    asset_table,
+    begin_asset_table_edit,
+    begin_record_table_edit,
+    commit_builder!,
+    commit_table!,
+    commands_from_format,
+    apply_import_plan,
+    migrate_aimora_asset_csv,
+    migrate_aimora_cases_catalog_v2,
+    migrate_aimora_catalog_entry_v1,
+    migrate_aimora_project_v1,
+    normalize_project,
+    open_project,
+    project_format_node,
+    project_from_format,
+    project_builder,
+    query_assets,
+    query_record_handles,
+    record_table,
+    resolve_handle,
+    save_project,
+    select_records,
+    set_asset_property!,
+    set_project_name!,
+    set_record_field!,
+    set_table_cell!,
+    unset_asset_property!,
+    unset_record_field!
+
+export ProjectImportApplication,
+    ProjectImportResult,
+    ProjectLoadResult
+
 include("identities.jl")
 include("quantities.jl")
 include("provenance.jl")
@@ -629,5 +671,8 @@ include("study_readiness.jl")
 include("dependency_analysis.jl")
 include("layered_validation.jl")
 include("transactions.jl")
+include("builders_queries.jl")
+include("table_views.jl")
+include("format_integration.jl")
 
 end

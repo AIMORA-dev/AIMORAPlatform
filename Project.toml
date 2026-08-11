@@ -5,11 +5,18 @@ authors = ["Ahmed Elkholy <ahmed_elkholy@f-eng.tanta.edu.eg>"]
 license = "PolyForm-Noncommercial-1.0.0"
 
 [deps]
+AIMORAFormats = "55f26d86-12d8-41b3-b163-188390d0187e"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 SHA = "ea8e919c-243c-51af-8825-aaa63cd721ce"
+Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
+[sources]
+AIMORAFormats = {url = "https://github.com/AIMORA-dev/AIMORAFormats.jl.git", rev = "c894022d3ecc470c0afa60c022d99a099e3b72d6"}
+
 [compat]
+AIMORAFormats = "0.1.0"
+Tables = "1"
 julia = "1.10"
 
 [extras]
