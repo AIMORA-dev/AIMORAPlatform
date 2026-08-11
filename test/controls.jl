@@ -956,3 +956,5 @@ end
     @test all(value -> isimmutable(value), values)
     @test all(value -> all(type -> !(type <: Function) && !(type <: AbstractDict), fieldtypes(typeof(value))), values)
 end
+
+record_project_conformance!(:control_networks)

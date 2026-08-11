@@ -363,3 +363,5 @@ end
         provenance,
     ))
 end
+
+record_project_conformance!(:canonical_primitives_schemas)

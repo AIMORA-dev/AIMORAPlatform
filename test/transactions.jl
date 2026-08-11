@@ -373,3 +373,5 @@ end
     )
     @test isempty(detect_revision_conflicts(fixture.revision, left, separate))
 end
+
+record_project_conformance!(:revisions_transactions)

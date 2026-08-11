@@ -848,3 +848,5 @@ end
         resolve_scenario(fixture.project, fixture.peak.identity.id),
     ])
 end
+
+record_project_conformance!(:events_scenarios)

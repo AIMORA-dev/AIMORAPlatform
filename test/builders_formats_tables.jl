@@ -1,3 +1,4 @@
+import AIMORAFormats
 using AIMORAFormats: BulkColumnSpec,
     BulkString,
     BulkTableSchema,
@@ -303,3 +304,5 @@ end
     @test only(migrated.diagnostics).code == :blocked_import_plan
     @test fixture.revision.project == fixture.project
 end
+
+record_project_conformance!(:builders_queries_tables_formats_imports)

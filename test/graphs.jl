@@ -438,3 +438,5 @@ end
     @test semantic_error_code(() -> validate!(delete_asset)) == :dangling_port_owner
     @test rollback!(delete_asset) === base
 end
+
+record_project_conformance!(:graph_domains_topology)

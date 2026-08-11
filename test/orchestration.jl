@@ -715,3 +715,5 @@ end
     apply!(transaction, command)
     @test rollback!(transaction) == base_revision
 end
+
+record_project_conformance!(:studies_workflows_experiments)

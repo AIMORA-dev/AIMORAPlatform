@@ -760,3 +760,5 @@ end
     @test all(!ismutabletype(type) for type in canonical_types)
     @test all(type -> all(field -> field !== Any && field !== Function && !(field <: AbstractDict), fieldtypes(type)), canonical_types)
 end
+
+record_project_conformance!(:assets_realizations_data)

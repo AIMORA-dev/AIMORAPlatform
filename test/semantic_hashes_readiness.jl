@@ -414,3 +414,5 @@ end
     @test [item.value for item in impact.roots] == ["bus.HV"]
     @test semantic_error_code(() -> dependency_impact(fixture.project, ProjectId[])) == :empty_dependency_roots
 end
+
+record_project_conformance!(:semantic_hashes_readiness)

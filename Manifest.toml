@@ -2,15 +2,15 @@
 
 julia_version = "1.10.11"
 manifest_format = "2.0"
-project_hash = "aebf6213faeb87be613ba0a181b19d76de685d1c"
+project_hash = "0784c12642cd9d6c81b6ae388b9f2fef6612b244"
 
 [[deps.AIMORAFormats]]
 deps = ["SHA", "TOML", "UUIDs", "Unicode"]
-git-tree-sha1 = "6c6b97bf61608bcc620436ebe34ada9f4a4b8ef7"
-repo-rev = "c894022d3ecc470c0afa60c022d99a099e3b72d6"
+git-tree-sha1 = "ba26ffd1d6f326dcc61e9603dd80fb33b667c0c9"
+repo-rev = "9a8ead659aa33795d323b64c27ece1c492c6bcaa"
 repo-url = "https://github.com/AIMORA-dev/AIMORAFormats.jl.git"
 uuid = "55f26d86-12d8-41b3-b163-188390d0187e"
-version = "0.1.0"
+version = "1.0.0"
 
 [[deps.DataAPI]]
 git-tree-sha1 = "abe83f3a2f1b857aac70ef8b269080af17764bbe"

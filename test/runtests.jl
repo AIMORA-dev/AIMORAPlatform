@@ -2,6 +2,8 @@ using Test
 using UUIDs
 using AIMORAProject
 
+include("conformance_registry.jl")
+
 function semantic_error_code(operation)
     try
         operation()
@@ -47,3 +49,5 @@ include("events_scenarios.jl")
 include("orchestration.jl")
 include("semantic_hashes_readiness.jl")
 include("builders_formats_tables.jl")
+include("release_boundary.jl")
+include("conformance.jl")
