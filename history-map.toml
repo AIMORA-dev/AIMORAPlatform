@@ -1,15 +1,15 @@
 schema = "aimora-platform-history-map-v1"
-method = "one multi-parent integration commit; original source commits and SHAs remain unchanged and reachable"
+method = "multi-parent integration commits; original source commits and SHAs remain unchanged and reachable"
 release_tags_at_migration = 0
 
 [[source]]
 repository = "https://github.com/AIMORA-dev/AIMORAProject.jl.git"
-commit = "0e1defe77c59ed8e927b970a120f3159517010fd"
+commit = "b58d7b1ea55d52828cce20b8825f6287fed2eb20"
 target = "packages/AIMORAProject.jl"
 
 [[source]]
 repository = "https://github.com/AIMORA-dev/AIMORAFormats.jl.git"
-commit = "cafdc34bcfffbd9137fbc2ef12bbb74df7dc2b0a"
+commit = "9a8ead659aa33795d323b64c27ece1c492c6bcaa"
 target = "packages/AIMORAFormats.jl"
 
 [[source]]

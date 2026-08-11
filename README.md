@@ -14,6 +14,6 @@ AIMORAPlatform is the consolidated public repository for AIMORA’s project mode
 
 Run `julia test/runtests.jl` for the repository contract. Run each Julia package’s normal `Pkg.test()` command for package-local behavior; the symbol library retains `julia packages/AIMORASymbols.jl/tests/runtests.jl`.
 
-The first Platform integration commit has the seven exact source revisions as parents, so their original commits, authors, dates, and messages remain reachable without rewritten SHAs. `history-map.toml` records the migration boundary.
+Platform integration commits retain each exact source revision as a parent, so original commits, authors, dates, and messages remain reachable without rewritten SHAs. `history-map.toml` records the current migration boundary.
 
 See `licensing.toml` before redistributing any path. The repository root does not override a package or content licence.

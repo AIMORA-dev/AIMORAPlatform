@@ -1,4 +1,5 @@
 using Test
+using Pkg
 using TOML
 using UUIDs
 
@@ -24,13 +25,24 @@ end
         project = TOML.parsefile(joinpath(package_root, "Project.toml"))
         @test project["name"] == package["name"]
         @test project["uuid"] == package["uuid"]
-        @test project["version"] == "0.1.0"
+        @test project["version"] == package["version"]
         @test project["license"] == "PolyForm-Noncommercial-1.0.0"
         @test isfile(joinpath(package_root, "src", "$(package["name"]).jl"))
         @test isfile(joinpath(package_root, "test", "runtests.jl"))
-        pushfirst!(LOAD_PATH, package_root)
-        loaded_module = Base.require(Base.PkgId(UUID(package["uuid"]), package["name"]))
-        @test nameof(loaded_module) == Symbol(package["name"])
+    end
+
+    mktempdir() do environment_root
+        Pkg.activate(environment_root; io = devnull)
+        package_specs = [
+            Pkg.PackageSpec(path = joinpath(PLATFORM_ROOT, package["path"]))
+            for package in julia_packages
+        ]
+        Pkg.develop(package_specs; io = devnull)
+        Pkg.instantiate(; io = devnull)
+        for package in julia_packages
+            loaded_module = Base.require(Base.PkgId(UUID(package["uuid"]), package["name"]))
+            @test nameof(loaded_module) == Symbol(package["name"])
+        end
     end
 
     symbols = only(filter(package -> package["kind"] == "content", packages))

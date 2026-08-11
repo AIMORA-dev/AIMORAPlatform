@@ -1,8 +1,14 @@
 name = "AIMORAFormats"
 uuid = "55f26d86-12d8-41b3-b163-188390d0187e"
-version = "0.1.0"
+version = "1.0.0"
 authors = ["Ahmed Elkholy <ahmed_elkholy@f-eng.tanta.edu.eg>"]
 license = "PolyForm-Noncommercial-1.0.0"
+
+[deps]
+SHA = "ea8e919c-243c-51af-8825-aaa63cd721ce"
+TOML = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
+UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
+Unicode = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
 
 [compat]
 julia = "1.10"

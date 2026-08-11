@@ -1,0 +1,26 @@
+format = "aimora-project-v1"
+
+[project]
+id = "demo"
+name = "Native migration demo"
+metadata = { owner = "AIMORA", count = 2 }
+
+[[cases]]
+id = "base"
+name = "Base case"
+
+[[cases.revisions]]
+id = "r1"
+parent_id = "r0"
+created_at = "2026-08-09T00:00:00.000"
+author = "test"
+description = "fixture"
+
+[[cases.scenarios]]
+id = "peak"
+name = "Peak"
+asset_tables = ["loads"]
+
+[[cases.scenarios.study_settings]]
+study = "emt"
+parameters = { timestep_s = 0.00001, method = "trapezoidal" }
