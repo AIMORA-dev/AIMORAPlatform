@@ -23,6 +23,7 @@ jobs:
       - uses: julia-actions/setup-julia@v2
         with:
           version: '1.10'
+      - uses: julia-actions/cache@v2
       - name: Repository integration contract
         run: julia --startup-file=no test/runtests.jl
 
@@ -44,6 +45,7 @@ jobs:
       - uses: julia-actions/setup-julia@v2
         with:
           version: '1.10'
+      - uses: julia-actions/cache@v2
       - name: Julia package tests
         if: matrix.package != 'AIMORASymbols.jl'
         run: julia --startup-file=no --project="${{ matrix.package }}" -e 'using Pkg; Pkg.test()'
