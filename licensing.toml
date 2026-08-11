@@ -1,0 +1,39 @@
+schema = "aimora-platform-licensing-v1"
+root_licence = "PolyForm-Noncommercial-1.0.0"
+root_licence_path = "LICENSES/PolyForm-Noncommercial-1.0.0.md"
+rule = "The most specific path entry controls; the repository root never overrides package-specific terms."
+
+[[path]]
+path = "packages/AIMORAProject.jl"
+licence = "PolyForm-Noncommercial-1.0.0"
+notice = "packages/AIMORAProject.jl/LICENSE"
+
+[[path]]
+path = "packages/AIMORAFormats.jl"
+licence = "PolyForm-Noncommercial-1.0.0"
+notice = "packages/AIMORAFormats.jl/LICENSE"
+
+[[path]]
+path = "packages/AIMORALayout.jl"
+licence = "PolyForm-Noncommercial-1.0.0"
+notice = "packages/AIMORALayout.jl/LICENSE"
+
+[[path]]
+path = "packages/AIMORAService.jl"
+licence = "PolyForm-Noncommercial-1.0.0"
+notice = "packages/AIMORAService.jl/LICENSE"
+
+[[path]]
+path = "packages/AIMORAVisuals.jl"
+licence = "PolyForm-Noncommercial-1.0.0"
+notice = "packages/AIMORAVisuals.jl/LICENSE"
+
+[[path]]
+path = "packages/AIMORAReporting.jl"
+licence = "PolyForm-Noncommercial-1.0.0"
+notice = "packages/AIMORAReporting.jl/LICENSE"
+
+[[path]]
+path = "packages/AIMORASymbols.jl"
+licence = "PolyForm-Noncommercial-1.0.0"
+notice = "packages/AIMORASymbols.jl/LICENSE"

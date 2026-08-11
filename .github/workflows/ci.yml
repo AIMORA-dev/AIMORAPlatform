@@ -1,24 +1,52 @@
-name: CI
+name: Platform CI
 
 on:
-  schedule:
-    - cron: "0 3 * * 0"
+  push:
+    branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: platform-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
+  repository:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1.10'
+      - name: Repository integration contract
+        run: julia --startup-file=no test/runtests.jl
+
+  packages:
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+        package:
+          - AIMORAProject.jl
+          - AIMORAFormats.jl
+          - AIMORALayout.jl
+          - AIMORAService.jl
+          - AIMORAVisuals.jl
+          - AIMORAReporting.jl
+          - AIMORASymbols.jl
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
         with:
-          version: '1'
-      - uses: julia-actions/cache@v2
-      - uses: julia-actions/julia-runtest@v1
+          version: '1.10'
+      - name: Julia package tests
+        if: matrix.package != 'AIMORASymbols.jl'
+        run: julia --startup-file=no --project="packages/${{ matrix.package }}" -e 'using Pkg; Pkg.test()'
+      - name: Symbol library tests
+        if: matrix.package == 'AIMORASymbols.jl'
+        run: julia --startup-file=no "packages/${{ matrix.package }}/tests/runtests.jl"

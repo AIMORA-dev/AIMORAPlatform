@@ -1,7 +1,7 @@
-# Contributing
+# Contributing to AIMORAPlatform
 
-Contributions must preserve the canonical-model role, add tests for executable behavior, and avoid private solver dependencies.
+Keep changes within the canonical package or library owner named by `package-graph.toml`. Preserve package names, UUIDs, Julia modules, public APIs, versions, tests, notices, and path-specific licences unless a separately reviewed migration explicitly changes them.
 
-## Contribution licence
+Run the touched package’s local tests and `julia test/runtests.jl`. Connected changes may be published as one coherent Platform commit; commit size alone is not a reason to fragment an accepted change.
 
-By submitting a contribution, you certify that you have the right to provide it and agree that you retain your copyright while granting Ahmed Elkholy a perpetual, worldwide, irrevocable, nonexclusive, royalty-free right to use, reproduce, modify, distribute, sublicense, and offer the contribution under this repository's PolyForm Noncommercial terms and under separately negotiated commercial agreements. Clearly identified third-party material is accepted only with compatible written redistribution and commercial-use rights; submitting it does not override its original licence.
+Contributions are accepted under the licence controlling the modified path in `licensing.toml`. Commercial use requires a separately negotiated agreement with the project owner.
