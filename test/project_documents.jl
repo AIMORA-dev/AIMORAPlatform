@@ -584,3 +584,5 @@ value: {\$artifact: {path: data/value.bin, format: binary, sha256: $(digest)}}
     @test_throws ArgumentError ProjectResolutionPolicy(max_authoritative_bytes = 0)
     @test_throws ArgumentError ProjectResolutionPolicy(max_hashed_resource_bytes = 0)
 end
+
+record_format_conformance!(:project_documents)

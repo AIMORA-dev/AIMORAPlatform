@@ -187,3 +187,5 @@ end
     @test pwd() == working_directory
     @test Base.loaded_modules == loaded_modules
 end
+
+record_format_conformance!(:restricted_expressions)

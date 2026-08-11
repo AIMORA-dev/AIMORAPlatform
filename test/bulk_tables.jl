@@ -741,3 +741,5 @@ end
     @test format_succeeded(do_result)
     @test do_rows == ["a"]
 end
+
+record_format_conformance!(:bulk_tabular_streaming)

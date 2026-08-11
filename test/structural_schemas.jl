@@ -474,3 +474,5 @@ end
         parse_json("{\"child\":{\"child\":{}}}").value,
     ))
 end
+
+record_format_conformance!(:structural_schemas)

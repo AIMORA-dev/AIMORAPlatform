@@ -707,3 +707,5 @@ end
     @test only(version_failure.diagnostics).code == :migration_version_mismatch
     @test only(version_failure.diagnostics).span.source_name == "wrong-version.json"
 end
+
+record_format_conformance!(:versioned_migrations)

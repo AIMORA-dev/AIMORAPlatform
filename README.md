@@ -28,6 +28,8 @@ Project resolution is data-only: Julia scripts, plugin locks, symbol resources, 
 
 `read_aimora_project_v1`, `read_aimora_asset_csv`, `read_aimora_catalog_entry_v1`, and `read_aimora_cases_catalog_v2` migrate the four current native AIMORA text surfaces into that same inert plan/report contract. They preserve exact source hashes and account for missing asset content, externally supplied CSV schemas, arbitrary dictionary parameters, implicit units, absent locks and hashes, unknown fields and versions, and optionally verified case-resource inventories without loading a project, solver, Julia entrypoint, or private dependency. Run `julia --project=. examples/native_migrations.jl` for a public data-only example.
 
+Version 1.0.0 is qualified by `julia --project=. -e 'using Pkg; Pkg.test()'` against a stable ten-target executable conformance inventory, deterministic adversarial/property corpora, resource and scale budgets, zero public method ambiguities, and Julia 1.10/current CI on Linux, macOS, and Windows. See `CHANGELOG.md` for the admitted release surface.
+
 ## Licence
 
 This repository's AIMORA-authored content is distributed under the PolyForm Noncommercial License 1.0.0. Research, education, personal study, public-interest noncommercial use, and other purposes permitted by that licence are free; commercial use requires a separate written agreement with Ahmed Elkholy <ahmed_elkholy@f-eng.tanta.edu.eg>. There is no licence key, activation, telemetry, or technical feature restriction. Clearly identified third-party material retains its own terms, and copies received under an earlier licence retain those prior grants.

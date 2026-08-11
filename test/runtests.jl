@@ -3,6 +3,8 @@ using AIMORAFormats
 using SHA
 using UUIDs
 
+include("conformance_registry.jl")
+
 @testset "open-text format package boundary" begin
     @test nameof(AIMORAFormats) === :AIMORAFormats
 end
@@ -1032,6 +1034,8 @@ git-tree-sha1 = "$(repeat("a", 40))"
     @test only(limited.diagnostics).code == :scalar_too_large
 end
 
+record_format_conformance!(:source_yaml_json_locks)
+
 include("bulk_tables.jl")
 include("structural_schemas.jl")
 include("migrations.jl")
@@ -1040,3 +1044,5 @@ include("restricted_expressions.jl")
 include("project_documents.jl")
 include("import_plans.jl")
 include("native_migrations.jl")
+include("release_boundary.jl")
+include("conformance.jl")

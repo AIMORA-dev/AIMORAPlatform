@@ -325,3 +325,5 @@ end
     @test empty_result.value.plan.applicable
     @test empty_result.value.plan.sha256 == import_plan_sha256(empty_result.value.plan)
 end
+
+record_format_conformance!(:generic_imports)

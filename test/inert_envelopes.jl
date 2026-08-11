@@ -287,3 +287,5 @@ symbol: NeverLoadedModule.callback
     @test !format_succeeded(limited)
     @test only(limited.diagnostics).code == :reference_too_large
 end
+
+record_format_conformance!(:inert_envelopes)

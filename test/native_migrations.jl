@@ -235,3 +235,5 @@ end
     @test all(format_succeeded, example_results)
     @test all(result -> result.value.plan.sha256 == import_plan_sha256(result.value.plan), example_results)
 end
+
+record_format_conformance!(:native_migrations)
