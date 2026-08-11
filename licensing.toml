@@ -4,36 +4,36 @@ root_licence_path = "LICENSES/PolyForm-Noncommercial-1.0.0.md"
 rule = "The most specific path entry controls; the repository root never overrides package-specific terms."
 
 [[path]]
-path = "packages/AIMORAProject.jl"
+path = "AIMORAProject.jl"
 licence = "PolyForm-Noncommercial-1.0.0"
-notice = "packages/AIMORAProject.jl/LICENSE"
+notice = "AIMORAProject.jl/LICENSE"
 
 [[path]]
-path = "packages/AIMORAFormats.jl"
+path = "AIMORAFormats.jl"
 licence = "PolyForm-Noncommercial-1.0.0"
-notice = "packages/AIMORAFormats.jl/LICENSE"
+notice = "AIMORAFormats.jl/LICENSE"
 
 [[path]]
-path = "packages/AIMORALayout.jl"
+path = "AIMORALayout.jl"
 licence = "PolyForm-Noncommercial-1.0.0"
-notice = "packages/AIMORALayout.jl/LICENSE"
+notice = "AIMORALayout.jl/LICENSE"
 
 [[path]]
-path = "packages/AIMORAService.jl"
+path = "AIMORAService.jl"
 licence = "PolyForm-Noncommercial-1.0.0"
-notice = "packages/AIMORAService.jl/LICENSE"
+notice = "AIMORAService.jl/LICENSE"
 
 [[path]]
-path = "packages/AIMORAVisuals.jl"
+path = "AIMORAVisuals.jl"
 licence = "PolyForm-Noncommercial-1.0.0"
-notice = "packages/AIMORAVisuals.jl/LICENSE"
+notice = "AIMORAVisuals.jl/LICENSE"
 
 [[path]]
-path = "packages/AIMORAReporting.jl"
+path = "AIMORAReporting.jl"
 licence = "PolyForm-Noncommercial-1.0.0"
-notice = "packages/AIMORAReporting.jl/LICENSE"
+notice = "AIMORAReporting.jl/LICENSE"
 
 [[path]]
-path = "packages/AIMORASymbols.jl"
+path = "AIMORASymbols.jl"
 licence = "PolyForm-Noncommercial-1.0.0"
-notice = "packages/AIMORASymbols.jl/LICENSE"
+notice = "AIMORASymbols.jl/LICENSE"

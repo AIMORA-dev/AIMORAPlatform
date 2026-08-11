@@ -46,7 +46,7 @@ jobs:
           version: '1.10'
       - name: Julia package tests
         if: matrix.package != 'AIMORASymbols.jl'
-        run: julia --startup-file=no --project="packages/${{ matrix.package }}" -e 'using Pkg; Pkg.test()'
+        run: julia --startup-file=no --project="${{ matrix.package }}" -e 'using Pkg; Pkg.test()'
       - name: Symbol library tests
         if: matrix.package == 'AIMORASymbols.jl'
-        run: julia --startup-file=no "packages/${{ matrix.package }}/tests/runtests.jl"
+        run: julia --startup-file=no "${{ matrix.package }}/tests/runtests.jl"
