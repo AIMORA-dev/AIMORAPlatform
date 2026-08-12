@@ -12,8 +12,7 @@ using TOML
     @test project["compat"]["julia"] == "1.10"
     @test Set(keys(project["extras"])) == Set(["Test", "TOML"])
     @test Set(project["targets"]["test"]) == Set(["Test", "TOML"])
-    @test project["sources"]["AIMORAFormats"]["rev"] ==
-        "9a8ead659aa33795d323b64c27ece1c492c6bcaa"
+    @test project["sources"]["AIMORAFormats"]["path"] == "../AIMORAFormats.jl"
 
     ambiguities = Test.detect_ambiguities(AIMORAProject; recursive = true)
     @test isempty(ambiguities)
@@ -32,12 +31,14 @@ using TOML
     @test isfile(joinpath(repository, "CHANGELOG.md"))
     @test occursin("## 1.0.0 — 2026-08-11", read(joinpath(repository, "CHANGELOG.md"), String))
 
-    workflow = read(joinpath(repository, ".github", "workflows", "ci.yml"), String)
+    platform_repository = normpath(joinpath(repository, ".."))
+    workflow = read(joinpath(platform_repository, ".github", "workflows", "ci.yml"), String)
     for runner in ("ubuntu-latest", "macos-latest", "windows-latest")
         @test occursin(runner, workflow)
     end
     @test occursin("julia: ['1.10', '1']", workflow)
-    @test !occursin("push:", workflow)
+    @test occursin("push:", workflow)
+    @test occursin("pull_request:", workflow)
 end
 
 record_project_conformance!(:release_boundary)

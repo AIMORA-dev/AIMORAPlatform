@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  schedule:
+    - cron: "0 3 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -42,13 +44,46 @@ jobs:
           - AIMORASymbols.jl
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: julia-actions/setup-julia@v2
         with:
           version: '1.10'
       - uses: julia-actions/cache@v2
+      - name: Prepare sibling package dependencies
+        if: matrix.package == 'AIMORAProject.jl'
+        run: julia --startup-file=no --project="${{ matrix.package }}" -e 'using Pkg; Pkg.develop(path="AIMORAFormats.jl")'
       - name: Julia package tests
         if: matrix.package != 'AIMORASymbols.jl'
         run: julia --startup-file=no --project="${{ matrix.package }}" -e 'using Pkg; Pkg.test()'
       - name: Symbol library tests
         if: matrix.package == 'AIMORASymbols.jl'
         run: julia --startup-file=no "${{ matrix.package }}/tests/runtests.jl"
+
+  cross-platform:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        julia: ['1.10', '1']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: ${{ matrix.julia }}
+      - uses: julia-actions/cache@v2
+      - name: Repository and package qualification
+        shell: bash
+        run: |
+          julia --startup-file=no test/runtests.jl
+          julia --startup-file=no --project=AIMORAFormats.jl -e 'using Pkg; Pkg.test()'
+          julia --startup-file=no --project=AIMORAProject.jl -e 'using Pkg; Pkg.develop(path="AIMORAFormats.jl"); Pkg.test()'
+          julia --startup-file=no --project=AIMORALayout.jl -e 'using Pkg; Pkg.test()'
+          julia --startup-file=no --project=AIMORAService.jl -e 'using Pkg; Pkg.test()'
+          julia --startup-file=no --project=AIMORAVisuals.jl -e 'using Pkg; Pkg.test()'
+          julia --startup-file=no --project=AIMORAReporting.jl -e 'using Pkg; Pkg.test()'
+          julia --startup-file=no AIMORASymbols.jl/tests/runtests.jl
