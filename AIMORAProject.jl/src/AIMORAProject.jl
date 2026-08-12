@@ -542,6 +542,23 @@ export AddExperimentDeclarationPatch,
     validate_orchestration,
     workflow_definition
 
+export ExtensionDeclaration,
+    ExtensionMigrationDeclaration,
+    ExtensionService,
+    ExtensionStateDeclaration,
+    ExtensionCheckpointService,
+    ExtensionEventService,
+    ExtensionInitializationService,
+    ExtensionJacobianService,
+    ExtensionNonlinearCurrentService,
+    ExtensionOutputService,
+    ExtensionReusableDefinitionService,
+    ExtensionSampledTaskService,
+    ExtensionSourceService,
+    ExtensionStateAcceptanceService,
+    ExtensionCompanionStampService,
+    extension_declaration_hash
+
 export AutomaticPrerequisitePending,
     DependencyImpact,
     ExecutionDependencySignatures,
@@ -647,6 +664,7 @@ include("hierarchy_types.jl")
 include("patch_types.jl")
 include("event_scenario_types.jl")
 include("study_types.jl")
+include("extension_declarations.jl")
 include("workflow_types.jl")
 include("experiment_types.jl")
 include("orchestration_types.jl")
