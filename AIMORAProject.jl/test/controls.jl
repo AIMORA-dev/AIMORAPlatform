@@ -584,6 +584,140 @@ end
     @test control_block(control.network, control.gain.identity.id) == control.gain
 end
 
+@testset "general multirate task declarations own exact families resources effects and precedence" begin
+    control = control_fixture()
+    task_ids = ProjectId[
+        ProjectId("task.protection"),
+        ProjectId("task.carrier"),
+        ProjectId("task.converter_control"),
+        ProjectId("task.mechanical"),
+        ProjectId("task.source"),
+        ProjectId("task.thermal"),
+        ProjectId("task.interface"),
+        ProjectId("task.user_defined"),
+    ]
+    families = ControlTaskFamily[
+        ProtectionControlTask,
+        CarrierControlTask,
+        ConverterControlTask,
+        MechanicalControlTask,
+        SourceControlTask,
+        ThermalControlTask,
+        InterfaceControlTask,
+        UserDefinedControlTask,
+    ]
+    declarations = ControlTaskDeclaration[
+        ControlTaskDeclaration(
+            task_ids[index],
+            families[index],
+            control_time("0.0", control.provenance),
+            control_time(string(index, "e-6"), control.provenance),
+            control_time("0.0", control.provenance),
+            control_time("0.0", control.provenance);
+            priority = index - 4,
+            read_resources = [ProjectId("resource.input.item_$index")],
+            write_resources = [ProjectId("resource.output.item_$index")],
+            invalidations = index == 1 ?
+                [InvalidateControlPowerHistory, InvalidateControlOutput] :
+                ControlTaskInvalidation[],
+        ) for index in eachindex(task_ids)
+    ]
+    schedule = ControlSchedule(
+        ControlHybrid,
+        HybridOrderedExecution,
+        task_ids;
+        sample_time = control_time("0.000001", control.provenance),
+        phase_offset = control_time("0.0", control.provenance),
+        computational_delay = control_time("0.0", control.provenance),
+        task_declarations = declarations,
+    )
+    @test AIMORAProject._validate_control_schedule(control.project, schedule)
+    @test collect(schedule.task_declarations) == declarations
+    @test Set(declaration.family for declaration in schedule.task_declarations) == Set(families)
+    @test collect(schedule.task_declarations[1].invalidations) == [
+        InvalidateControlPowerHistory,
+        InvalidateControlOutput,
+    ]
+
+    shared = ProjectId("resource.shared_command")
+    writer = ControlTaskDeclaration(
+        ProjectId("task.writer"),
+        ConverterControlTask,
+        control_time("0.0", control.provenance),
+        control_time("0.00001", control.provenance),
+        control_time("0.0", control.provenance),
+        control_time("0.000002", control.provenance);
+        write_resources = [shared],
+    )
+    reader = ControlTaskDeclaration(
+        ProjectId("task.reader"),
+        ProtectionControlTask,
+        control_time("0.0", control.provenance),
+        control_time("0.00002", control.provenance),
+        control_time("0.0", control.provenance),
+        control_time("0.0", control.provenance);
+        read_resources = [shared],
+        predecessors = [writer.task],
+    )
+    ordered = ControlSchedule(
+        ControlHybrid,
+        HybridOrderedExecution,
+        [writer.task, reader.task];
+        sample_time = control_time("0.00001", control.provenance),
+        phase_offset = control_time("0.0", control.provenance),
+        computational_delay = control_time("0.0", control.provenance),
+        task_declarations = [writer, reader],
+    )
+    @test AIMORAProject._validate_control_schedule(control.project, ordered)
+
+    unordered_reader = ControlTaskDeclaration(
+        reader.task,
+        reader.family,
+        reader.epoch,
+        reader.period,
+        reader.phase,
+        reader.computational_delay;
+        read_resources = collect(reader.read_resources),
+    )
+    unordered = ControlSchedule(
+        ordered.domain,
+        ordered.semantics,
+        collect(ordered.task_order);
+        sample_time = ordered.sample_time,
+        phase_offset = ordered.phase_offset,
+        computational_delay = ordered.computational_delay,
+        task_declarations = [writer, unordered_reader],
+    )
+    @test semantic_error_code(() -> AIMORAProject._validate_control_schedule(
+        control.project,
+        unordered,
+    )) == :unordered_control_task_resource_conflict
+
+    cyclic_writer = ControlTaskDeclaration(
+        writer.task,
+        writer.family,
+        writer.epoch,
+        writer.period,
+        writer.phase,
+        writer.computational_delay;
+        write_resources = collect(writer.write_resources),
+        predecessors = [reader.task],
+    )
+    cyclic = ControlSchedule(
+        ordered.domain,
+        ordered.semantics,
+        collect(ordered.task_order);
+        sample_time = ordered.sample_time,
+        phase_offset = ordered.phase_offset,
+        computational_delay = ordered.computational_delay,
+        task_declarations = [cyclic_writer, reader],
+    )
+    @test semantic_error_code(() -> AIMORAProject._validate_control_schedule(
+        control.project,
+        cyclic,
+    )) == :cyclic_control_task_dependencies
+end
+
 @testset "control validation rejects schedule contract state and physical-signal ambiguity" begin
     control = control_fixture()
     wrong_schedule = ControlSchedule(

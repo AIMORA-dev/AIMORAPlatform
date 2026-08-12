@@ -13,6 +13,24 @@ end
     HybridOrderedExecution = 0x04
 end
 
+@enum ControlTaskFamily::UInt8 begin
+    ProtectionControlTask = 0x01
+    CarrierControlTask = 0x02
+    ConverterControlTask = 0x03
+    MechanicalControlTask = 0x04
+    SourceControlTask = 0x05
+    ThermalControlTask = 0x06
+    InterfaceControlTask = 0x07
+    UserDefinedControlTask = 0x08
+end
+
+@enum ControlTaskInvalidation::UInt8 begin
+    InvalidateControlPowerHistory = 0x01
+    InvalidateControlTopology = 0x02
+    InvalidateControlInterface = 0x03
+    InvalidateControlOutput = 0x04
+end
+
 @enum ControlStateKind::UInt8 begin
     ContinuousControlState = 0x01
     DiscreteControlState = 0x02
@@ -267,6 +285,76 @@ Base.:(==)(left::ControlBlock, right::ControlBlock) =
     left.parameters == right.parameters && left.ports == right.ports &&
     left.states == right.states && left.provenance == right.provenance
 
+"""One callback-free exact task declaration; the task owner retains equations, state, and execution behavior."""
+struct ControlTaskDeclaration
+    task::ProjectId
+    family::ControlTaskFamily
+    epoch::PhysicalValue{ScalarQuantity}
+    period::PhysicalValue{ScalarQuantity}
+    phase::PhysicalValue{ScalarQuantity}
+    computational_delay::PhysicalValue{ScalarQuantity}
+    priority::Int
+    read_resources::CanonicalList{ProjectId}
+    write_resources::CanonicalList{ProjectId}
+    predecessors::CanonicalList{ProjectId}
+    invalidations::CanonicalList{ControlTaskInvalidation}
+
+    function ControlTaskDeclaration(
+        task::ProjectId,
+        family::ControlTaskFamily,
+        epoch::PhysicalValue{ScalarQuantity},
+        period::PhysicalValue{ScalarQuantity},
+        phase::PhysicalValue{ScalarQuantity},
+        computational_delay::PhysicalValue{ScalarQuantity};
+        priority::Integer = 0,
+        read_resources::AbstractVector{ProjectId} = ProjectId[],
+        write_resources::AbstractVector{ProjectId} = ProjectId[],
+        predecessors::AbstractVector{ProjectId} = ProjectId[],
+        invalidations::AbstractVector{ControlTaskInvalidation} = ControlTaskInvalidation[],
+    )
+        typed_priority = try
+            Int(priority)
+        catch
+            _semantic_fail(:invalid_control_task_priority, "control task priority exceeds Int")
+        end
+        reads = sort!(collect(read_resources); by = item -> item.value)
+        writes = sort!(collect(write_resources); by = item -> item.value)
+        dependencies = sort!(collect(predecessors); by = item -> item.value)
+        effects = sort!(collect(invalidations); by = UInt8)
+        length(reads) == length(unique(reads)) ||
+            _semantic_fail(:duplicate_control_task_read_resource, "control task repeats a read resource")
+        length(writes) == length(unique(writes)) ||
+            _semantic_fail(:duplicate_control_task_write_resource, "control task repeats a write resource")
+        length(dependencies) == length(unique(dependencies)) ||
+            _semantic_fail(:duplicate_control_task_predecessor, "control task repeats a predecessor")
+        task in dependencies &&
+            _semantic_fail(:control_task_self_dependency, "control task cannot precede itself")
+        length(effects) == length(unique(effects)) ||
+            _semantic_fail(:duplicate_control_task_invalidation, "control task repeats an invalidation effect")
+        return new(
+            task,
+            family,
+            epoch,
+            period,
+            phase,
+            computational_delay,
+            typed_priority,
+            CanonicalList{ProjectId}(reads),
+            CanonicalList{ProjectId}(writes),
+            CanonicalList{ProjectId}(dependencies),
+            CanonicalList{ControlTaskInvalidation}(effects),
+        )
+    end
+end
+
+Base.:(==)(left::ControlTaskDeclaration, right::ControlTaskDeclaration) =
+    left.task == right.task && left.family == right.family &&
+    left.epoch == right.epoch && left.period == right.period &&
+    left.phase == right.phase && left.computational_delay == right.computational_delay &&
+    left.priority == right.priority && left.read_resources == right.read_resources &&
+    left.write_resources == right.write_resources && left.predecessors == right.predecessors &&
+    left.invalidations == right.invalidations
+
 """One explicitly ordered scheduler declaration without scheduler execution."""
 struct ControlSchedule
     domain::ControlExecutionDomain
@@ -275,6 +363,7 @@ struct ControlSchedule
     phase_offset::Union{Nothing,PhysicalValue{ScalarQuantity}}
     computational_delay::Union{Nothing,PhysicalValue{ScalarQuantity}}
     task_order::CanonicalList{ProjectId}
+    task_declarations::CanonicalList{ControlTaskDeclaration}
 
     function ControlSchedule(
         domain::ControlExecutionDomain,
@@ -283,18 +372,32 @@ struct ControlSchedule
         sample_time::Union{Nothing,PhysicalValue{ScalarQuantity}} = nothing,
         phase_offset::Union{Nothing,PhysicalValue{ScalarQuantity}} = nothing,
         computational_delay::Union{Nothing,PhysicalValue{ScalarQuantity}} = nothing,
+        task_declarations::AbstractVector{ControlTaskDeclaration} = ControlTaskDeclaration[],
     )
         copied = collect(task_order)
         length(copied) == length(unique(copied)) ||
             _semantic_fail(:duplicate_control_task, "control schedule repeats a block")
-        return new(domain, semantics, sample_time, phase_offset, computational_delay, CanonicalList{ProjectId}(copied))
+        declarations = collect(task_declarations)
+        declaration_ids = getfield.(declarations, :task)
+        length(declaration_ids) == length(unique(declaration_ids)) ||
+            _semantic_fail(:duplicate_control_task_declaration, "control schedule repeats a task declaration")
+        return new(
+            domain,
+            semantics,
+            sample_time,
+            phase_offset,
+            computational_delay,
+            CanonicalList{ProjectId}(copied),
+            CanonicalList{ControlTaskDeclaration}(declarations),
+        )
     end
 end
 
 Base.:(==)(left::ControlSchedule, right::ControlSchedule) =
     left.domain == right.domain && left.semantics == right.semantics &&
     left.sample_time == right.sample_time && left.phase_offset == right.phase_offset &&
-    left.computational_delay == right.computational_delay && left.task_order == right.task_order
+    left.computational_delay == right.computational_delay && left.task_order == right.task_order &&
+    left.task_declarations == right.task_declarations
 
 """A named external control-network port backed by the canonical signal graph."""
 struct ControlExternalPort

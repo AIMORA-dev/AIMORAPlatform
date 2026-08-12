@@ -462,6 +462,187 @@ function _canonical_value(node::AIMORAFormats.FormatNode)
     _project_format_fail(:unknown_canonical_value_kind, "canonical field value kind is unsupported", kind_node)
 end
 
+function _control_task_time(node::AIMORAFormats.FormatNode, label::String)
+    value = _canonical_value(node)
+    value isa PhysicalValue{ScalarQuantity} || _project_format_fail(
+        :control_task_time_quantity_required,
+        "$label must be a scalar physical value",
+        node,
+    )
+    return value
+end
+
+function _control_task_declaration_node(declaration::ControlTaskDeclaration)
+    return _format_mapping(
+        "task" => _format_string(declaration.task.value),
+        "family" => _format_string(_enum_string(declaration.family)),
+        "epoch" => _canonical_value_node(declaration.epoch),
+        "period" => _canonical_value_node(declaration.period),
+        "phase" => _canonical_value_node(declaration.phase),
+        "computational_delay" => _canonical_value_node(declaration.computational_delay),
+        "priority" => _format_integer(declaration.priority),
+        "read_resources" => _format_sequence(AIMORAFormats.FormatNode[
+            _format_string(resource.value) for resource in declaration.read_resources
+        ]),
+        "write_resources" => _format_sequence(AIMORAFormats.FormatNode[
+            _format_string(resource.value) for resource in declaration.write_resources
+        ]),
+        "predecessors" => _format_sequence(AIMORAFormats.FormatNode[
+            _format_string(predecessor.value) for predecessor in declaration.predecessors
+        ]),
+        "invalidations" => _format_sequence(AIMORAFormats.FormatNode[
+            _format_string(_enum_string(effect)) for effect in declaration.invalidations
+        ]),
+    )
+end
+
+function _control_task_declaration(node::AIMORAFormats.FormatNode)
+    values = _mapping(node, [
+        "task",
+        "family",
+        "epoch",
+        "period",
+        "phase",
+        "computational_delay",
+        "priority",
+        "read_resources",
+        "write_resources",
+        "predecessors",
+        "invalidations",
+    ])
+    return ControlTaskDeclaration(
+        ProjectId(_string(values["task"])),
+        _parse_enum(ControlTaskFamily, values["family"]),
+        _control_task_time(values["epoch"], "control task epoch"),
+        _control_task_time(values["period"], "control task period"),
+        _control_task_time(values["phase"], "control task phase"),
+        _control_task_time(values["computational_delay"], "control task delay");
+        priority = _integer(values["priority"]),
+        read_resources = ProjectId[
+            ProjectId(_string(item)) for item in _sequence(values["read_resources"])
+        ],
+        write_resources = ProjectId[
+            ProjectId(_string(item)) for item in _sequence(values["write_resources"])
+        ],
+        predecessors = ProjectId[
+            ProjectId(_string(item)) for item in _sequence(values["predecessors"])
+        ],
+        invalidations = ControlTaskInvalidation[
+            _parse_enum(ControlTaskInvalidation, item)
+            for item in _sequence(values["invalidations"])
+        ],
+    )
+end
+
+function _optional_control_task_time(node::AIMORAFormats.FormatNode, label::String)
+    return _optional(node, item -> _control_task_time(item, label))
+end
+
+"""Return the versioned inert format node for one exact public control schedule."""
+function control_schedule_format_node(schedule::ControlSchedule)
+    schedule_node = _format_mapping(
+        "domain" => _format_string(_enum_string(schedule.domain)),
+        "semantics" => _format_string(_enum_string(schedule.semantics)),
+        "sample_time" => isnothing(schedule.sample_time) ?
+            _format_null() : _canonical_value_node(schedule.sample_time),
+        "phase_offset" => isnothing(schedule.phase_offset) ?
+            _format_null() : _canonical_value_node(schedule.phase_offset),
+        "computational_delay" => isnothing(schedule.computational_delay) ?
+            _format_null() : _canonical_value_node(schedule.computational_delay),
+        "task_order" => _format_sequence(AIMORAFormats.FormatNode[
+            _format_string(task.value) for task in schedule.task_order
+        ]),
+        "task_declarations" => _format_sequence(AIMORAFormats.FormatNode[
+            _control_task_declaration_node(declaration)
+            for declaration in schedule.task_declarations
+        ]),
+    )
+    return _format_mapping(
+        "format" => _format_mapping(
+            "name" => _format_string("aimora-control-schedule"),
+            "version" => _format_string("1.0.0"),
+        ),
+        "schedule" => schedule_node,
+    )
+end
+
+function _control_schedule_from_format_node(root::AIMORAFormats.FormatNode)
+    values = _mapping(root, ["format", "schedule"])
+    format_values = _mapping(values["format"], ["name", "version"])
+    _string(format_values["name"]) == "aimora-control-schedule" || _project_format_fail(
+        :unknown_control_schedule_format,
+        "control schedule format name is unsupported",
+        format_values["name"],
+    )
+    _string(format_values["version"]) == "1.0.0" || _project_format_fail(
+        :unknown_control_schedule_format_version,
+        "control schedule format version is unsupported",
+        format_values["version"],
+    )
+    schedule_values = _mapping(values["schedule"], [
+        "domain",
+        "semantics",
+        "sample_time",
+        "phase_offset",
+        "computational_delay",
+        "task_order",
+        "task_declarations",
+    ])
+    return ControlSchedule(
+        _parse_enum(ControlExecutionDomain, schedule_values["domain"]),
+        _parse_enum(ControlSchedulerSemantics, schedule_values["semantics"]),
+        ProjectId[
+            ProjectId(_string(item)) for item in _sequence(schedule_values["task_order"])
+        ];
+        sample_time = _optional_control_task_time(
+            schedule_values["sample_time"],
+            "control schedule sample time",
+        ),
+        phase_offset = _optional_control_task_time(
+            schedule_values["phase_offset"],
+            "control schedule phase offset",
+        ),
+        computational_delay = _optional_control_task_time(
+            schedule_values["computational_delay"],
+            "control schedule computational delay",
+        ),
+        task_declarations = ControlTaskDeclaration[
+            _control_task_declaration(item)
+            for item in _sequence(schedule_values["task_declarations"])
+        ],
+    )
+end
+
+"""Decode one inert control schedule and refuse unknown versions or semantic values."""
+function control_schedule_from_format(root::AIMORAFormats.FormatNode)
+    try
+        return AIMORAFormats.FormatResult{ControlSchedule}(
+            _control_schedule_from_format_node(root),
+        )
+    catch error
+        if error isa _ProjectFormatFailure
+            return AIMORAFormats.FormatResult{ControlSchedule}(nothing, [error.diagnostic])
+        elseif error isa SemanticValidationError
+            diagnostic = AIMORAFormats.FormatDiagnostic(
+                AIMORAFormats.DiagnosticError,
+                error.code,
+                error.message,
+                root.span,
+            )
+            return AIMORAFormats.FormatResult{ControlSchedule}(nothing, [diagnostic])
+        elseif error isa ArgumentError || error isa MethodError || error isa InexactError
+            diagnostic = AIMORAFormats.FormatDiagnostic(
+                AIMORAFormats.DiagnosticError,
+                :invalid_control_schedule_semantic_value,
+                sprint(showerror, error),
+                root.span,
+            )
+            return AIMORAFormats.FormatResult{ControlSchedule}(nothing, [diagnostic])
+        end
+        rethrow()
+    end
+end
+
 function _constraint_node(constraint::NumericBoundsConstraint)
     return _format_mapping(
         "kind" => _format_string("numeric_bounds"),

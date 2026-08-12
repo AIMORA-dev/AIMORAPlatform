@@ -193,6 +193,27 @@ function _expanded_control_system(system::ControlSystem, prefix::ProjectId)
             sample_time = network.schedule.sample_time,
             phase_offset = network.schedule.phase_offset,
             computational_delay = network.schedule.computational_delay,
+            task_declarations = ControlTaskDeclaration[
+                ControlTaskDeclaration(
+                    _scoped_id(prefix, declaration.task),
+                    declaration.family,
+                    declaration.epoch,
+                    declaration.period,
+                    declaration.phase,
+                    declaration.computational_delay;
+                    priority = declaration.priority,
+                    read_resources = ProjectId[
+                        _scoped_id(prefix, resource) for resource in declaration.read_resources
+                    ],
+                    write_resources = ProjectId[
+                        _scoped_id(prefix, resource) for resource in declaration.write_resources
+                    ],
+                    predecessors = ProjectId[
+                        _scoped_id(prefix, predecessor) for predecessor in declaration.predecessors
+                    ],
+                    invalidations = collect(declaration.invalidations),
+                ) for declaration in network.schedule.task_declarations
+            ],
         )
         boundaries = ControlBoundaryBinding[
             ControlBoundaryBinding(

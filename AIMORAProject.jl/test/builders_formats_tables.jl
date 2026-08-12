@@ -185,6 +185,73 @@ end
     @test semantic_error_code(() -> project_format_node(asset_project)) == :project_profile_requires_split_semantic_sections
 end
 
+@testset "versioned exact control task schedules round trip without executable behavior" begin
+    control = control_fixture()
+    writer = ControlTaskDeclaration(
+        ProjectId("task.writer"),
+        ConverterControlTask,
+        control_time("0.0", control.provenance),
+        control_time("0.00001", control.provenance),
+        control_time("0.000001", control.provenance),
+        control_time("0.000002", control.provenance);
+        priority = 2,
+        write_resources = [ProjectId("resource.command")],
+        invalidations = [InvalidateControlPowerHistory, InvalidateControlOutput],
+    )
+    reader = ControlTaskDeclaration(
+        ProjectId("task.reader"),
+        ProtectionControlTask,
+        control_time("0.0", control.provenance),
+        control_time("0.00002", control.provenance),
+        control_time("0.000001", control.provenance),
+        control_time("0.0", control.provenance);
+        priority = -2,
+        read_resources = [ProjectId("resource.command")],
+        write_resources = [ProjectId("resource.trip")],
+        predecessors = [writer.task],
+        invalidations = [InvalidateControlTopology],
+    )
+    schedule = ControlSchedule(
+        ControlHybrid,
+        HybridOrderedExecution,
+        [writer.task, reader.task];
+        sample_time = control_time("0.000001", control.provenance),
+        phase_offset = control_time("0.0", control.provenance),
+        computational_delay = control_time("0.0", control.provenance),
+        task_declarations = [writer, reader],
+    )
+    @test AIMORAProject._validate_control_schedule(control.project, schedule)
+    serialized = serialize_restricted_yaml(control_schedule_format_node(schedule))
+    @test format_succeeded(serialized)
+    parsed = parse_restricted_yaml(
+        collect(serialized.value.bytes);
+        source_name = "control_schedule.aimora.yaml",
+    )
+    @test format_succeeded(parsed)
+    decoded = control_schedule_from_format(parsed.value.root)
+    @test format_succeeded(decoded)
+    @test decoded.value == schedule
+    @test AIMORAProject._validate_control_schedule(control.project, decoded.value)
+    @test collect(serialize_restricted_yaml(
+        control_schedule_format_node(decoded.value),
+    ).value.bytes) == collect(serialized.value.bytes)
+
+    unsupported_text = replace(
+        String(serialized.value.bytes),
+        "\"version\":\"1.0.0\"" => "\"version\":\"2.0.0\"";
+        count = 1,
+    )
+    @test unsupported_text != String(serialized.value.bytes)
+    unsupported = parse_restricted_yaml(
+        unsupported_text;
+        source_name = "unsupported_control_schedule.aimora.yaml",
+    )
+    @test format_succeeded(unsupported)
+    rejected = control_schedule_from_format(unsupported.value.root)
+    @test !format_succeeded(rejected)
+    @test only(rejected.diagnostics).code == :unknown_control_schedule_format_version
+end
+
 function import_application_fixture()
     fixture = canonical_project_fixture()
     schema = SemanticSchema(

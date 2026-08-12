@@ -27,6 +27,147 @@ function _time_value(project::CanonicalProject, value::PhysicalValue{ScalarQuant
     return exact_rational(convert_quantity(project.units, value.quantity, UnitId("s")).value)
 end
 
+function _control_task_calendar_collides(
+    left_epoch::ExactRational,
+    left_period::ExactRational,
+    left_phase::ExactRational,
+    right_epoch::ExactRational,
+    right_period::ExactRational,
+    right_phase::ExactRational,
+)
+    values = (
+        left_epoch + left_phase,
+        left_period,
+        right_epoch + right_phase,
+        right_period,
+    )
+    common_denominator = foldl(lcm, (value.denominator for value in values); init = BigInt(1))
+    integer_values = ntuple(index -> begin
+        value = values[index]
+        value.numerator * div(common_denominator, value.denominator)
+    end, 4)
+    left_start, left_stride, right_start, right_stride = integer_values
+    return iszero(rem(right_start - left_start, gcd(left_stride, right_stride)))
+end
+
+function _control_task_dependency_paths(
+    task_ids::Vector{ProjectId},
+    declarations::CanonicalList{ControlTaskDeclaration},
+)
+    indices = Dict(id => index for (index, id) in pairs(task_ids))
+    adjacency = [Int[] for _ in task_ids]
+    edge_count = 0
+    for declaration in declarations
+        target = indices[declaration.task]
+        for predecessor in declaration.predecessors
+            haskey(indices, predecessor) || _semantic_fail(
+                :unknown_control_task_predecessor,
+                "control task predecessor is not declared in the same schedule",
+            )
+            push!(adjacency[indices[predecessor]], target)
+            edge_count += 1
+        end
+    end
+    edge_count <= 4_096 || _semantic_fail(
+        :control_task_edge_limit_exceeded,
+        "control schedule exceeds 4,096 explicit predecessor edges",
+    )
+    state = zeros(UInt8, length(task_ids))
+    function visit(index)
+        state[index] == 0x01 && _semantic_fail(
+            :cyclic_control_task_dependencies,
+            "control task predecessor graph contains a cycle",
+        )
+        state[index] == 0x02 && return
+        state[index] = 0x01
+        foreach(visit, adjacency[index])
+        state[index] = 0x02
+        return
+    end
+    foreach(visit, eachindex(task_ids))
+    reachable = falses(length(task_ids), length(task_ids))
+    for source in eachindex(task_ids)
+        stack = copy(adjacency[source])
+        while !isempty(stack)
+            target = pop!(stack)
+            reachable[source, target] && continue
+            reachable[source, target] = true
+            append!(stack, adjacency[target])
+        end
+    end
+    return reachable
+end
+
+function _validate_control_task_declarations(
+    project::CanonicalProject,
+    schedule::ControlSchedule,
+)
+    declarations = schedule.task_declarations
+    isempty(declarations) && return true
+    length(declarations) <= 1_024 || _semantic_fail(
+        :control_task_limit_exceeded,
+        "control schedule exceeds 1,024 task declarations",
+    )
+    task_ids = ProjectId[declaration.task for declaration in declarations]
+    Set(task_ids) == Set{ProjectId}(schedule.task_order) || _semantic_fail(
+        :incomplete_control_task_declarations,
+        "general control task declarations must cover the exact task order",
+    )
+    zero_time = ExactRational(0)
+    minimum_period = ExactRational(1, 1_000_000_000)
+    maximum_period = ExactRational(1_000)
+    calendars = Vector{NTuple{3,ExactRational}}(undef, length(declarations))
+    for (index, declaration) in pairs(declarations)
+        epoch = _time_value(project, declaration.epoch)
+        period = _time_value(project, declaration.period)
+        phase = _time_value(project, declaration.phase)
+        delay = _time_value(project, declaration.computational_delay)
+        minimum_period <= period <= maximum_period || _semantic_fail(
+            :control_task_period_out_of_domain,
+            "control task period must be from 1 ns through 1,000 s",
+        )
+        zero_time <= phase < period || _semantic_fail(
+            :invalid_control_task_phase,
+            "control task phase must be in [0, period)",
+        )
+        zero_time <= delay <= ExactRational(100) * period || _semantic_fail(
+            :invalid_control_task_delay,
+            "control task delay must be from zero through 100 periods",
+        )
+        calendars[index] = (epoch, period, phase)
+    end
+    reachable = _control_task_dependency_paths(task_ids, declarations)
+    for left_index in eachindex(declarations)
+        left = declarations[left_index]
+        left_reads = Set{ProjectId}(left.read_resources)
+        left_writes = Set{ProjectId}(left.write_resources)
+        for right_index in (left_index + 1):length(declarations)
+            right = declarations[right_index]
+            left_epoch, left_period, left_phase = calendars[left_index]
+            right_epoch, right_period, right_phase = calendars[right_index]
+            _control_task_calendar_collides(
+                left_epoch,
+                left_period,
+                left_phase,
+                right_epoch,
+                right_period,
+                right_phase,
+            ) || continue
+            right_reads = Set{ProjectId}(right.read_resources)
+            right_writes = Set{ProjectId}(right.write_resources)
+            conflicts = !isempty(intersect(left_writes, union(right_reads, right_writes))) ||
+                !isempty(intersect(right_writes, left_reads))
+            conflicts || continue
+            (reachable[left_index, right_index] || reachable[right_index, left_index]) ||
+                _semantic_fail(
+                    :unordered_control_task_resource_conflict,
+                    "same-instant control tasks with a read/write or write/write conflict require a predecessor path",
+                )
+        end
+    end
+    return true
+end
+
 function _validate_control_schedule(project::CanonicalProject, schedule::ControlSchedule)
     expected_semantics = if schedule.domain == ControlContinuous
         ContinuousResidualEvaluation
@@ -61,6 +202,7 @@ function _validate_control_schedule(project::CanonicalProject, schedule::Control
     elseif !isnothing(schedule.phase_offset) || !isnothing(schedule.computational_delay)
         _semantic_fail(:nonperiodic_control_timing, "continuous or event-driven control network cannot declare periodic timing")
     end
+    _validate_control_task_declarations(project, schedule)
     return true
 end
 
