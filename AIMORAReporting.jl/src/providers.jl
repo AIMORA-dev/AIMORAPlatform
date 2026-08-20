@@ -2,10 +2,10 @@ const _REPORT_PROVIDERS = Dict{Symbol,Function}()
 
 const _PROVIDER_REQUIRED_ROLES = Dict{Symbol,Vector{String}}(
     :emt => ["executive-summary", "study-definition", "method", "results", "quality", "limitations", "provenance"],
-    :line_constants => ["executive-summary", "study-definition", "geometry", "results", "quality", "limitations", "provenance"],
-    :cable_constants => ["executive-summary", "study-definition", "geometry", "results", "quality", "limitations", "provenance"],
-    :transformer_parameters => ["executive-summary", "study-definition", "test-data", "results", "quality", "limitations", "provenance"],
-    :validation => ["executive-summary", "scope", "evidence", "results", "limitations", "provenance"],
+    :line_constants => ["executive-summary", "geometry", "results", "quality", "limitations", "provenance"],
+    :cable_constants => ["executive-summary", "geometry", "results", "quality", "limitations", "provenance"],
+    :transformer_parameters => ["executive-summary", "test-data", "results", "quality", "limitations", "provenance"],
+    :validation => ["executive-summary", "study-definition", "results", "quality", "limitations", "provenance"],
     :combined => ["executive-summary", "dependency-graph", "study-comparison", "consolidated-findings", "limitations", "provenance"],
 )
 

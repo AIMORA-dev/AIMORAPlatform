@@ -40,7 +40,7 @@ function add_comment!(
             Symbol(severity),
             String(text),
             :open,
-            DateTime(created_at),
+            created_at isa DateTime ? created_at : DateTime(created_at),
             nothing,
             "",
         ),
@@ -59,7 +59,7 @@ function resolve_comment!(
     isnothing(comment) && throw(ArgumentError("unknown review comment: $comment_id"))
     report.comments[comment].status == :resolved && return report.comments[comment]
     report.comments[comment].status = :resolved
-    report.comments[comment].resolved_at = DateTime(resolved_at)
+    report.comments[comment].resolved_at = resolved_at isa DateTime ? resolved_at : DateTime(resolved_at)
     report.comments[comment].resolution = String(resolution)
     return report.comments[comment]
 end
@@ -81,7 +81,7 @@ function approve!(
         Symbol(role),
         String(actor),
         :approve,
-        DateTime(timestamp),
+        timestamp isa DateTime ? timestamp : DateTime(timestamp),
         content_hash(report),
     )
     push!(report.approvals, approval)

@@ -1,5 +1,52 @@
-_html_escape(value) = replace(String(value), '&' => "&amp;", '<' => "&lt;", '>' => "&gt;", '"' => "&quot;", '\'' => "&#39;")
-_tex_escape(value) = replace(String(value), '\\' => "\\textbackslash{}", '&' => "\\&", '%' => "\\%", '$' => "\\$", '#' => "\\#", '_' => "\\_", '{' => "\\{", '}' => "\\}", '~' => "\\textasciitilde{}", '^' => "\\textasciicircum{}")
+function _html_escape(value)
+    io = IOBuffer()
+    for character in String(value)
+        if character == '&'
+            print(io, "&amp;")
+        elseif character == '<'
+            print(io, "&lt;")
+        elseif character == '>'
+            print(io, "&gt;")
+        elseif character == '"'
+            print(io, "&quot;")
+        elseif character == '\''
+            print(io, "&#39;")
+        else
+            print(io, character)
+        end
+    end
+    return String(take!(io))
+end
+
+function _tex_escape(value)
+    io = IOBuffer()
+    for character in String(value)
+        if character == '\\'
+            print(io, raw"\textbackslash{}")
+        elseif character == '&'
+            print(io, raw"\&")
+        elseif character == '%'
+            print(io, raw"\%")
+        elseif character == '$'
+            print(io, raw"\$")
+        elseif character == '#'
+            print(io, raw"\#")
+        elseif character == '_'
+            print(io, raw"\_")
+        elseif character == '{'
+            print(io, raw"\{")
+        elseif character == '}'
+            print(io, raw"\}")
+        elseif character == '~'
+            print(io, raw"\textasciitilde{}")
+        elseif character == '^'
+            print(io, raw"\textasciicircum{}")
+        else
+            print(io, character)
+        end
+    end
+    return String(take!(io))
+end
 
 function _display_value(value)
     value === missing && return "—"
@@ -32,7 +79,7 @@ function _markdown_block(table::ReportTable)
     unit_row = any(!isempty, table.units) ? "| " * join([isempty(unit) ? "" : "[$unit]" for unit in table.units], " | ") * " |" : ""
     rows = ["| " * join(_display_value.(row), " | ") * " |" for row in table.rows]
     notes = isempty(table.notes) ? "" : "\n" * join("- " .* table.notes, "\n") * "\n"
-    return "### $(table.title)\n\n" * join(filter(!isempty, vcat([header, separator, unit_row], rows)), "\n") * "\n" * notes
+    return "### $(table.title)\n\n" * join(filter(value -> !isempty(value), vcat([header, separator, unit_row], rows)), "\n") * "\n" * notes
 end
 
 function _markdown_block(figure::FigureBlock)
@@ -289,7 +336,7 @@ function _compile_tectonic(tex_path, output_directory)
     executable = Sys.which("tectonic")
     isnothing(executable) && throw(ToolchainUnavailable("tectonic", "tectonic", "PDF compilation was requested, but Tectonic is unavailable. The portable TeX source remains valid."))
     command = `$(executable) --only-cached --keep-logs --outdir $(output_directory) $(tex_path)`
-    success(run(command; wait = true)) || error("Tectonic failed to compile the report")
+    run(command; wait = true)
     return joinpath(output_directory, replace(basename(tex_path), r"\.tex$" => ".pdf"))
 end
 
@@ -361,7 +408,7 @@ function render_bundle(
             report.revision,
             content_hash(report),
             template_digest,
-            DateTime(generated_at),
+            generated_at isa DateTime ? generated_at : DateTime(generated_at),
             artifacts,
             warnings,
         )

@@ -48,7 +48,7 @@ function ResultBinding(;
         String(study_id),
         Symbol(study_family),
         String(result_id),
-        VersionNumber(result_schema),
+        result_schema isa VersionNumber ? result_schema : VersionNumber(result_schema),
         String(solver_revision),
         lowercase(String(payload_hash)),
         String.(upstream_hashes),
@@ -103,7 +103,7 @@ function ReportMetadata(;
         String.(approved_by),
         String(organization),
         String(client),
-        DateTime(issued_at),
+        issued_at isa DateTime ? issued_at : DateTime(issued_at),
         String(language),
         String.(tags),
     )
@@ -359,7 +359,7 @@ function ReportDocument(
     return ReportDocument(
         String(id),
         Int(revision),
-        VersionNumber(schema_version),
+        schema_version isa VersionNumber ? schema_version : VersionNumber(schema_version),
         metadata,
         ResultBinding[bindings...],
         Dict(String(k) => String.(v) for (k, v) in dependencies),
