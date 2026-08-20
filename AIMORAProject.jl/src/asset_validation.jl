@@ -189,6 +189,16 @@ function _validate_measurement(project::CanonicalProject, measurement::Measureme
         any(profile -> profile.identity.id == measurement.profile.target.id, project.asset_library.profiles) ||
             _semantic_fail(:dangling_measurement_profile, "measurement profile does not exist")
     end
+    if !isnothing(measurement.chain)
+        chain = something(measurement.chain)
+        if !isnothing(chain.record)
+            record = something(chain.record)
+            isnothing(record.schema) && _semantic_fail(
+                :missing_measurement_record_schema,
+                "measurement-chain record artifact requires an exact schema identity",
+            )
+        end
+    end
     return true
 end
 

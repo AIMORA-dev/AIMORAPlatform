@@ -427,6 +427,279 @@ Base.:(==)(left::MatrixDescriptor, right::MatrixDescriptor) =
     left.column_order == right.column_order && left.symmetry == right.symmetry &&
     left.provenance == right.provenance
 
+@enum MeasurementProductKind::UInt8 begin
+    LinearCurrentTransformerProduct = 0x01
+    MagneticCurrentTransformerProduct = 0x02
+    InductiveVoltageTransformerProduct = 0x03
+    CouplingCapacitorVoltageTransformerProduct = 0x04
+    ElectronicCurrentSensorProduct = 0x05
+    ElectronicVoltageSensorProduct = 0x06
+    ThreePhaseSampledMeasurementProduct = 0x07
+end
+
+@enum MeasurementQuantizerKind::UInt8 begin
+    MeasurementUnquantized = 0x01
+    MeasurementUniformQuantizer = 0x02
+end
+
+@enum MeasurementQuantizerTieRule::UInt8 begin
+    MeasurementTiesToEven = 0x01
+    MeasurementTiesAwayFromZero = 0x02
+    MeasurementTiesTowardZero = 0x03
+end
+
+@enum MeasurementEstimatorKind::UInt8 begin
+    MeasurementInstantaneousEstimator = 0x01
+    MeasurementSlidingRmsEstimator = 0x02
+    MeasurementFundamentalPhasorEstimator = 0x03
+    MeasurementSequenceEstimator = 0x04
+    MeasurementFrequencyEstimator = 0x05
+end
+
+struct MeasurementAcquisitionDefinition
+    tick_s::ExactRational
+    sample_period_ticks::Int
+    first_sample_tick::Int
+    aperture_ticks::Int
+    delay_ticks::Int
+    window_sample_count::Int
+    nominal_frequency_hz::ExactRational
+
+    function MeasurementAcquisitionDefinition(
+        tick_s::ExactRational,
+        sample_period_ticks::Integer,
+        first_sample_tick::Integer,
+        aperture_ticks::Integer,
+        delay_ticks::Integer,
+        window_sample_count::Integer,
+        nominal_frequency_hz::ExactRational,
+    )
+        tick_s > ExactRational(0) || _semantic_fail(
+            :invalid_measurement_tick,
+            "measurement acquisition tick must be positive",
+        )
+        sample_period_ticks > 0 || _semantic_fail(
+            :invalid_measurement_period,
+            "measurement sample period must be a positive tick count",
+        )
+        first_sample_tick >= 0 || _semantic_fail(
+            :invalid_measurement_phase,
+            "measurement first sample tick must be nonnegative",
+        )
+        0 <= aperture_ticks <= sample_period_ticks || _semantic_fail(
+            :invalid_measurement_aperture,
+            "measurement aperture must fit inside one sample period",
+        )
+        delay_ticks >= 0 || _semantic_fail(
+            :invalid_measurement_delay,
+            "measurement delay must be nonnegative",
+        )
+        4 <= window_sample_count <= 4096 || _semantic_fail(
+            :invalid_measurement_window,
+            "measurement estimator window must contain 4 through 4096 samples",
+        )
+        nominal_frequency_hz > ExactRational(0) || _semantic_fail(
+            :invalid_measurement_frequency,
+            "measurement nominal frequency must be positive",
+        )
+        return new(
+            tick_s,
+            Int(sample_period_ticks),
+            Int(first_sample_tick),
+            Int(aperture_ticks),
+            Int(delay_ticks),
+            Int(window_sample_count),
+            nominal_frequency_hz,
+        )
+    end
+end
+
+Base.:(==)(left::MeasurementAcquisitionDefinition, right::MeasurementAcquisitionDefinition) =
+    left.tick_s == right.tick_s &&
+    left.sample_period_ticks == right.sample_period_ticks &&
+    left.first_sample_tick == right.first_sample_tick &&
+    left.aperture_ticks == right.aperture_ticks &&
+    left.delay_ticks == right.delay_ticks &&
+    left.window_sample_count == right.window_sample_count &&
+    left.nominal_frequency_hz == right.nominal_frequency_hz
+
+struct MeasurementQuantizerDefinition
+    kind::MeasurementQuantizerKind
+    lower_clip::ExactRational
+    upper_clip::ExactRational
+    engineering_offset::Union{Nothing,ExactRational}
+    engineering_step::Union{Nothing,ExactRational}
+    minimum_code::Union{Nothing,BigInt}
+    maximum_code::Union{Nothing,BigInt}
+    tie_rule::MeasurementQuantizerTieRule
+
+    function MeasurementQuantizerDefinition(
+        kind::MeasurementQuantizerKind,
+        lower_clip::ExactRational,
+        upper_clip::ExactRational;
+        engineering_offset::Union{Nothing,ExactRational}=nothing,
+        engineering_step::Union{Nothing,ExactRational}=nothing,
+        minimum_code::Union{Nothing,Integer}=nothing,
+        maximum_code::Union{Nothing,Integer}=nothing,
+        tie_rule::MeasurementQuantizerTieRule=MeasurementTiesToEven,
+    )
+        lower_clip < upper_clip || _semantic_fail(
+            :invalid_measurement_clip_limits,
+            "measurement clipping limits must increase strictly",
+        )
+        minimum = isnothing(minimum_code) ? nothing : BigInt(minimum_code)
+        maximum = isnothing(maximum_code) ? nothing : BigInt(maximum_code)
+        if kind == MeasurementUnquantized
+            all(isnothing, (engineering_offset, engineering_step, minimum, maximum)) ||
+                _semantic_fail(
+                    :hidden_measurement_quantizer,
+                    "unquantized measurement cannot retain hidden code parameters",
+                )
+        else
+            all(value -> !isnothing(value), (
+                engineering_offset,
+                engineering_step,
+                minimum,
+                maximum,
+            )) ||
+                _semantic_fail(
+                    :incomplete_measurement_quantizer,
+                    "uniform measurement quantizer requires offset, step, and code limits",
+                )
+            something(engineering_step) > ExactRational(0) || _semantic_fail(
+                :invalid_measurement_quantizer_step,
+                "uniform measurement quantizer step must be positive",
+            )
+            something(minimum) < something(maximum) || _semantic_fail(
+                :invalid_measurement_code_limits,
+                "uniform measurement code limits must increase strictly",
+            )
+        end
+        return new(
+            kind,
+            lower_clip,
+            upper_clip,
+            engineering_offset,
+            engineering_step,
+            minimum,
+            maximum,
+            tie_rule,
+        )
+    end
+end
+
+
+Base.:(==)(left::MeasurementQuantizerDefinition, right::MeasurementQuantizerDefinition) =
+    left.kind == right.kind && left.lower_clip == right.lower_clip &&
+    left.upper_clip == right.upper_clip &&
+    left.engineering_offset == right.engineering_offset &&
+    left.engineering_step == right.engineering_step &&
+    left.minimum_code == right.minimum_code && left.maximum_code == right.maximum_code &&
+    left.tie_rule == right.tie_rule
+
+struct MeasurementChainIdentity
+    schema_version::VersionNumber
+    product::MeasurementProductKind
+    topology::String
+    terminal_order::CanonicalList{String}
+    channel_order::CanonicalList{String}
+    phase_order::CanonicalList{String}
+    acquisition::MeasurementAcquisitionDefinition
+    quantizer::MeasurementQuantizerDefinition
+    estimators::CanonicalList{MeasurementEstimatorKind}
+    algorithm_version::VersionNumber
+    source::ContentDigest
+    record::Union{Nothing,ArtifactIdentity}
+
+    function MeasurementChainIdentity(
+        schema_version::VersionNumber,
+        product::MeasurementProductKind,
+        topology::AbstractString,
+        terminal_order::AbstractVector{<:AbstractString},
+        channel_order::AbstractVector{<:AbstractString},
+        phase_order::AbstractVector{<:AbstractString},
+        acquisition::MeasurementAcquisitionDefinition,
+        quantizer::MeasurementQuantizerDefinition,
+        estimators::AbstractVector{MeasurementEstimatorKind},
+        algorithm_version::VersionNumber,
+        source::ContentDigest;
+        record::Union{Nothing,ArtifactIdentity}=nothing,
+    )
+        schema_version.major == 1 || _semantic_fail(
+            :unsupported_measurement_schema,
+            "measurement-chain schema major version must be one",
+        )
+        algorithm_version.major == 1 || _semantic_fail(
+            :unsupported_measurement_algorithm,
+            "measurement-chain algorithm major version must be one",
+        )
+        topology_text = String(topology)
+        occursin(r"^[a-z][a-z0-9_]*$", topology_text) || _semantic_fail(
+            :invalid_measurement_topology,
+            "measurement topology must be a lowercase portable identifier",
+        )
+        terminals = String.(terminal_order)
+        channels = String.(channel_order)
+        phases = String.(phase_order)
+        isempty(terminals) && _semantic_fail(
+            :empty_measurement_terminals,
+            "measurement chain requires explicit terminal or observation ownership",
+        )
+        isempty(channels) && _semantic_fail(
+            :empty_measurement_channels,
+            "measurement chain requires at least one channel",
+        )
+        length(terminals) == length(unique(terminals)) || _semantic_fail(
+            :duplicate_measurement_terminal,
+            "measurement chain repeats a terminal identity",
+        )
+        length(channels) == length(unique(channels)) || _semantic_fail(
+            :duplicate_measurement_channel,
+            "measurement chain repeats a channel identity",
+        )
+        if product == ThreePhaseSampledMeasurementProduct
+            phases == ["a", "b", "c"] && length(channels) == 3 || _semantic_fail(
+                :invalid_three_phase_measurement_identity,
+                "three-phase sampled measurement requires three explicit abc channels",
+            )
+        elseif !isempty(phases)
+            phases == ["a", "b", "c"] && length(channels) == 3 || _semantic_fail(
+                :invalid_measurement_phase_order,
+                "phase-owned measurement channels require three explicit abc identities",
+            )
+        end
+        estimator_rows = sort!(unique(collect(estimators)); by=UInt8)
+        isempty(estimator_rows) && _semantic_fail(
+            :empty_measurement_estimators,
+            "measurement chain requires at least one estimator/output identity",
+        )
+        return new(
+            schema_version,
+            product,
+            topology_text,
+            CanonicalList{String}(terminals),
+            CanonicalList{String}(channels),
+            CanonicalList{String}(phases),
+            acquisition,
+            quantizer,
+            CanonicalList{MeasurementEstimatorKind}(estimator_rows),
+            algorithm_version,
+            source,
+            record,
+        )
+    end
+end
+
+
+Base.:(==)(left::MeasurementChainIdentity, right::MeasurementChainIdentity) =
+    left.schema_version == right.schema_version && left.product == right.product &&
+    left.topology == right.topology && left.terminal_order == right.terminal_order &&
+    left.channel_order == right.channel_order && left.phase_order == right.phase_order &&
+    left.acquisition == right.acquisition && left.quantizer == right.quantizer &&
+    left.estimators == right.estimators &&
+    left.algorithm_version == right.algorithm_version && left.source == right.source &&
+    left.record == right.record
+
 struct MeasurementDefinition <: AssetLibraryElement
     identity::ObjectIdentity
     target::ProjectReference
@@ -435,13 +708,33 @@ struct MeasurementDefinition <: AssetLibraryElement
     orientation::QuantityOrientation
     profile::Union{Nothing,ProjectReference}
     provenance::ProvenanceSource
+    chain::Union{Nothing,MeasurementChainIdentity}
 end
+
+MeasurementDefinition(
+    identity::ObjectIdentity,
+    target::ProjectReference,
+    quantity::SemanticTypeId,
+    unit::UnitId,
+    orientation::QuantityOrientation,
+    profile::Union{Nothing,ProjectReference},
+    provenance::ProvenanceSource,
+) = MeasurementDefinition(
+    identity,
+    target,
+    quantity,
+    unit,
+    orientation,
+    profile,
+    provenance,
+    nothing,
+)
 
 Base.:(==)(left::MeasurementDefinition, right::MeasurementDefinition) =
     left.identity == right.identity && left.target == right.target &&
     left.quantity == right.quantity && left.unit == right.unit &&
     left.orientation == right.orientation && left.profile == right.profile &&
-    left.provenance == right.provenance
+    left.provenance == right.provenance && left.chain == right.chain
 
 struct AssetLibrary
     assets::CanonicalList{CanonicalAsset}

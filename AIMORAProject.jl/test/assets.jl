@@ -433,6 +433,84 @@ end
     @test fixture.matrix.row_order == fixture.matrix.column_order
     @test fixture.measurement.profile.target.id == fixture.profile.identity.id
 
+    acquisition = MeasurementAcquisitionDefinition(
+        ExactRational(1, 100_000),
+        10,
+        0,
+        0,
+        2,
+        200,
+        ExactRational(50),
+    )
+    quantizer = MeasurementQuantizerDefinition(
+        MeasurementUniformQuantizer,
+        ExactRational(-2_000),
+        ExactRational(2_000);
+        engineering_offset=ExactRational(0),
+        engineering_step=ExactRational(1, 10),
+        minimum_code=-20_000,
+        maximum_code=20_000,
+        tie_rule=MeasurementTiesToEven,
+    )
+    chain = MeasurementChainIdentity(
+        v"1.0.0",
+        ThreePhaseSampledMeasurementProduct,
+        "three_phase_voltage_chain",
+        ["bus_a", "bus_b", "bus_c"],
+        ["voltage_a", "voltage_b", "voltage_c"],
+        ["a", "b", "c"],
+        acquisition,
+        quantizer,
+        [
+            MeasurementInstantaneousEstimator,
+            MeasurementSlidingRmsEstimator,
+            MeasurementFundamentalPhasorEstimator,
+            MeasurementSequenceEstimator,
+            MeasurementFrequencyEstimator,
+        ],
+        v"1.0.0",
+        ContentDigest(repeat("c", 64)),
+    )
+    chained_measurement = MeasurementDefinition(
+        fixture.measurement.identity,
+        fixture.measurement.target,
+        fixture.measurement.quantity,
+        fixture.measurement.unit,
+        fixture.measurement.orientation,
+        fixture.measurement.profile,
+        fixture.measurement.provenance,
+        chain,
+    )
+    chained_project = unsafe_project(
+        fixture.metadata,
+        fixture.registry,
+        fixture.units,
+        collect(fixture.project.records),
+        fixture.project.graphs,
+        AssetLibrary(
+            assets=[fixture.asset],
+            profiles=[fixture.profile],
+            measurements=[chained_measurement],
+        ),
+    )
+    @test validate_project(chained_project)
+    @test chained_measurement.chain == chain
+    @test chained_measurement != fixture.measurement
+    @test project_physics_hash(chained_project) != project_physics_hash(fixture.project)
+    @test semantic_error_code(() -> MeasurementChainIdentity(
+        v"1.0.0",
+        ThreePhaseSampledMeasurementProduct,
+        "bad_three_phase_chain",
+        ["bus_a", "bus_b", "bus_c"],
+        ["voltage_a", "voltage_b", "voltage_c"],
+        ["a", "c", "b"],
+        acquisition,
+        quantizer,
+        [MeasurementInstantaneousEstimator],
+        v"1.0.0",
+        ContentDigest(repeat("d", 64)),
+    )) == :invalid_three_phase_measurement_identity
+
     @test semantic_error_code(() -> CurveDescriptor(
         ObjectIdentity(ProjectId("curve.empty")),
         fixture.curve.x_axis,
