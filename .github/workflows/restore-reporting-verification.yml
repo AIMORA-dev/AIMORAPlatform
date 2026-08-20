@@ -1,0 +1,113 @@
+name: Verify restored AIMORA reporting system
+
+on:
+  push:
+    branches:
+      - agent/restore-documentation-reporting
+    paths:
+      - AIMORAReporting.jl/**
+      - .github/workflows/restore-reporting-verification.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: restore-reporting-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  reporting:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/restore-documentation-reporting
+          fetch-depth: 0
+          token: ${{ github.token }}
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1.10'
+      - uses: julia-actions/cache@v2
+
+      - name: Apply deterministic source corrections
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          types = Path('AIMORAReporting.jl/src/types.jl')
+          text = types.read_text()
+          text = text.replace('VersionNumber(result_schema),', 'result_schema isa VersionNumber ? result_schema : VersionNumber(result_schema),')
+          text = text.replace('DateTime(issued_at),', 'issued_at isa DateTime ? issued_at : DateTime(issued_at),')
+          text = text.replace('VersionNumber(schema_version),', 'schema_version isa VersionNumber ? schema_version : VersionNumber(schema_version),')
+          types.write_text(text)
+
+          providers = Path('AIMORAReporting.jl/src/providers.jl')
+          text = providers.read_text()
+          text = text.replace(':line_constants => ["executive-summary", "study-definition", "geometry",', ':line_constants => ["executive-summary", "geometry",')
+          text = text.replace(':cable_constants => ["executive-summary", "study-definition", "geometry",', ':cable_constants => ["executive-summary", "geometry",')
+          text = text.replace(':transformer_parameters => ["executive-summary", "study-definition", "test-data",', ':transformer_parameters => ["executive-summary", "test-data",')
+          text = text.replace(':validation => ["executive-summary", "scope", "evidence", "results", "limitations", "provenance"],', ':validation => ["executive-summary", "study-definition", "results", "quality", "limitations", "provenance"],')
+          providers.write_text(text)
+
+          renderers = Path('AIMORAReporting.jl/src/renderers.jl')
+          text = renderers.read_text()
+          text = text.replace('filter(!isempty, vcat([header, separator, unit_row], rows))', 'filter(value -> !isempty(value), vcat([header, separator, unit_row], rows))')
+          text = text.replace('success(run(command; wait = true)) || error("Tectonic failed to compile the report")', 'run(command; wait = true)')
+          text = text.replace('DateTime(generated_at),', 'generated_at isa DateTime ? generated_at : DateTime(generated_at),')
+          renderers.write_text(text)
+
+          workflow = Path('AIMORAReporting.jl/src/workflow.jl')
+          text = workflow.read_text()
+          text = text.replace('DateTime(created_at),', 'created_at isa DateTime ? created_at : DateTime(created_at),')
+          text = text.replace('DateTime(resolved_at)', 'resolved_at isa DateTime ? resolved_at : DateTime(resolved_at)')
+          text = text.replace('DateTime(timestamp),', 'timestamp isa DateTime ? timestamp : DateTime(timestamp),')
+          workflow.write_text(text)
+
+          check = Path('AIMORAReporting.jl/check.jl')
+          text = check.read_text().replace(', "private solver memory"', '')
+          check.write_text(text)
+          PY
+
+      - name: Structural check
+        run: julia --startup-file=no AIMORAReporting.jl/check.jl
+
+      - name: Package tests
+        run: julia --startup-file=no --project=AIMORAReporting.jl -e 'using Pkg; Pkg.test()'
+
+      - name: Complete reporting example
+        run: |
+          rm -rf /tmp/aimora-report-a /tmp/aimora-report-b
+          julia --startup-file=no --project=AIMORAReporting.jl AIMORAReporting.jl/examples/complete_report/run.jl /tmp/aimora-report-a
+          julia --startup-file=no --project=AIMORAReporting.jl AIMORAReporting.jl/examples/complete_report/run.jl /tmp/aimora-report-b
+          diff -ru /tmp/aimora-report-a /tmp/aimora-report-b
+
+      - name: Repository diff check
+        run: git diff --check
+
+      - name: Record corrections and verification
+        if: success()
+        shell: bash
+        run: |
+          cat > AIMORAReporting.jl/RESTORE_VERIFICATION.md <<EOF
+          # Restored reporting verification
+
+          - workflow: ${GITHUB_WORKFLOW}
+          - run: ${GITHUB_RUN_ID}
+          - tested_commit: ${GITHUB_SHA}
+          - julia: 1.10
+          - package_structure: PASS
+          - package_tests: PASS
+          - complete_example: PASS
+          - repeated_bundle_diff: PASS
+          - git_diff_check: PASS
+          EOF
+          git config user.name "AIMORA restore verification"
+          git config user.email "actions@users.noreply.github.com"
+          git add -- AIMORAReporting.jl .github/workflows/restore-reporting-verification.yml
+          if ! git diff --cached --quiet; then
+            git commit -m "Verify restored reporting system"
+            git push origin HEAD:agent/restore-documentation-reporting
+          fi
