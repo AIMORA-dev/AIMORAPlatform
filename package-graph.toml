@@ -52,7 +52,7 @@ path = "AIMORAReporting.jl"
 kind = "julia"
 name = "AIMORAReporting"
 uuid = "79e9649d-112a-4870-83df-912117092548"
-version = "0.1.0"
+version = "0.2.0"
 depends_on = []
 
 [[package]]

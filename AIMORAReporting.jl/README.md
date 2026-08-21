@@ -1,7 +1,149 @@
 # AIMORAReporting.jl
 
-`AIMORAReporting.jl` is the minimal community-source owner reserved for semantic reports, typed result binding, TeX/HTML/Markdown rendering, reproducibility, document control, review, and publication. It contains no renderer or report API yet and will never read private solver memory directly.
+`AIMORAReporting.jl` is the canonical Julia owner for semantic engineering reports, immutable typed-result binding, report QA, deterministic rendering, document control, review, approval, publication freeze, correction, and supersession.
+
+The package implements the public reporting boundary described by `REQ-REPORTING-001` and the reporting-facing portions of `REQ-VISUALS-001`, `REQ-REPORT-TEX-001`, `REQ-REPORT-PUBLICATION-001`, `REQ-REPORT-STUDY-PROVIDER-001`, and `REQ-REPORT-TEMPLATES-001`.
+
+## Design principles
+
+- Reports bind exact project, scenario, study, result, solver, schema, unit-base, assumption, validity-domain, warning, and upstream-result identities.
+- The semantic report is authoritative. Markdown, HTML, text, JSON, TeX, PDF, CSV, SVG, and TikZ are renderings of the same typed content.
+- No renderer reads private solver arrays or scrapes terminal output, GUI labels, screenshots, or mutable application state.
+- Numerical values remain typed data through table and figure generation.
+- Every component has a stable ID for review comments and reproducible publication.
+- Missing units, malformed tables, non-finite values, invalid logarithmic domains, lost event indices, bad uncertainty bounds, inaccessible figures, dependency cycles, stale approvals, and changed frozen content produce typed QA issues.
+- PDF compilation is optional. Loading AIMORA or generating portable TeX never requires TeX or a graphical backend.
+- A frozen publication is immutable. A correction is a new revision that explicitly supersedes the prior report.
+
+## Quick start
+
+```julia
+using AIMORAReporting
+using Dates
+
+result_payload = Dict("peak_voltage_pu" => 1.82, "samples" => 1001)
+binding = ResultBinding(
+    project_id = "project-001",
+    project_revision = "project@42",
+    scenario_id = "energization",
+    study_id = "emt-001",
+    study_family = :emt,
+    result_id = "result-emt-001",
+    solver_revision = "solver@abc123",
+    payload_hash = hash_payload(result_payload),
+    units_base = "SI and per unit",
+    assumptions = ["Ideal lumped RLC elements"],
+    validity_domain = ["Fixed-step EMT case"],
+)
+
+metadata = ReportMetadata(
+    title = "RLC Energization Study",
+    report_number = "AIMORA-EMT-001",
+    revision_label = "D1",
+    prepared_by = ["Engineer"],
+    issued_at = DateTime(2026, 8, 20),
+)
+
+x = collect(range(0.0, 0.01; length = 1001))
+y = 1 .- exp.(-500 .* x) .* cos.(4000 .* x)
+series = PlotSeries(
+    "capacitor-voltage",
+    "Capacitor voltage",
+    x,
+    y;
+    x_unit = "s",
+    y_unit = "pu",
+    source_hash = binding.payload_hash,
+    event_indices = [1],
+)
+figure = FigureBlock(
+    "voltage-waveform",
+    "Capacitor-voltage transient.",
+    "Capacitor voltage rises and oscillates toward its steady value.",
+    PlotSpec(
+        "voltage-plot",
+        "Capacitor voltage",
+        AxisSpec("Time"; unit = "s"),
+        AxisSpec("Voltage"; unit = "pu"),
+        [series],
+    );
+    source_ids = [binding.result_id],
+)
+
+table = ReportTable(
+    "summary-table",
+    "Key results",
+    ["quantity", "value"],
+    [["Peak voltage", maximum(y)], ["Samples", length(y)]];
+    units = ["", "pu or count"],
+    source_ids = [binding.result_id],
+)
+
+report = build_report(
+    :emt,
+    metadata,
+    [binding],
+    Dict(
+        "report_id" => "rlc-energization-report",
+        "summary" => "The source energizes a damped series-RLC network.",
+        "inputs" => Dict("duration_s" => 0.01, "samples" => 1001),
+        "method" => "Fixed-step electromagnetic-transient solution.",
+        "tables" => [table],
+        "figures" => [figure],
+        "quality" => Dict("finite" => true, "event_samples_preserved" => true),
+        "findings" => ["The initial current is limited by the series inductance."],
+        "limitations" => ["The example uses ideal lumped components."],
+    ),
+)
+
+@assert ispassing(qa_report(report; required_roles = required_section_roles(:emt)))
+submit_for_review!(report)
+approve!(report, "Approver"; timestamp = DateTime(2026, 8, 20))
+freeze!(report)
+manifest = render_bundle(report, "outputs"; generated_at = DateTime(2026, 8, 20))
+```
+
+## Providers
+
+The package registers providers for currently implemented AIMORA report families:
+
+- `:emt`
+- `:line_constants`
+- `:cable_constants`
+- `:transformer_parameters`
+- `:validation`
+- `:combined`
+
+A provider declares and builds a minimum useful semantic report from typed result contracts. It does not recompute study physics. Planned study families must not be registered as released providers until their underlying studies and public claims are accepted.
+
+## Output bundle
+
+A standard bundle may contain:
+
+```text
+report.md
+report.html
+report.txt
+report.json
+report.tex
+data/*.csv
+figures/*.svg
+tikz/*.tex
+manifest.toml
+```
+
+`manifest.toml` records the report hash, template hash, deterministic generation timestamp, warnings, artifact names, and SHA-256 checksums. Existing authored files are not deleted. Only files previously identified as generated by a manifest may be removed as stale output.
+
+## Tests
+
+```bash
+make -C AIMORAReporting.jl check
+make -C AIMORAReporting.jl test
+make -C AIMORAReporting.jl example
+```
+
+PDF compilation is tested only when a locked Tectonic toolchain is available. Portable TeX generation remains supported without it.
 
 ## Licence
 
-This repository's AIMORA-authored content is distributed under the PolyForm Noncommercial License 1.0.0. Research, education, personal study, public-interest noncommercial use, and other purposes permitted by that licence are free; commercial use requires a separate written agreement with Ahmed Elkholy <ahmed_elkholy@f-eng.tanta.edu.eg>. There is no licence key, activation, telemetry, or technical feature restriction. Clearly identified third-party material retains its own terms, and copies received under an earlier licence retain those prior grants.
+AIMORA-authored content in this repository is distributed under the PolyForm Noncommercial License 1.0.0. Commercial use requires a separate written agreement with Ahmed Elkholy <ahmed_elkholy@f-eng.tanta.edu.eg>. Third-party assets retain their own terms.
