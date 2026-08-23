@@ -1,6 +1,6 @@
-# AIMORAReporting.jl
+# AIMORAReporting
 
-`AIMORAReporting.jl` is the canonical Julia owner for semantic engineering reports, immutable typed-result binding, report QA, deterministic rendering, document control, review, approval, publication freeze, correction, and supersession.
+`AIMORAReporting` is the canonical Julia owner for semantic engineering reports, immutable typed-result binding, report QA, deterministic rendering, document control, review, approval, publication freeze, correction, and supersession.
 
 The package implements the public reporting boundary described by `REQ-REPORTING-001` and the reporting-facing portions of `REQ-VISUALS-001`, `REQ-REPORT-TEX-001`, `REQ-REPORT-PUBLICATION-001`, `REQ-REPORT-STUDY-PROVIDER-001`, and `REQ-REPORT-TEMPLATES-001`.
 
@@ -137,9 +137,9 @@ manifest.toml
 ## Tests
 
 ```bash
-make -C AIMORAReporting.jl check
-make -C AIMORAReporting.jl test
-make -C AIMORAReporting.jl example
+make -C AIMORAReporting check
+make -C AIMORAReporting test
+make -C AIMORAReporting example
 ```
 
 PDF compilation is tested only when a locked Tectonic toolchain is available. Portable TeX generation remains supported without it.

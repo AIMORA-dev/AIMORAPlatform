@@ -5,34 +5,34 @@ release_tags_at_migration = 0
 [[source]]
 repository = "https://github.com/AIMORA-dev/AIMORAProject.jl.git"
 commit = "b58d7b1ea55d52828cce20b8825f6287fed2eb20"
-target = "AIMORAProject.jl"
+target = "AIMORAProject"
 
 [[source]]
 repository = "https://github.com/AIMORA-dev/AIMORAFormats.jl.git"
 commit = "9a8ead659aa33795d323b64c27ece1c492c6bcaa"
-target = "AIMORAFormats.jl"
+target = "AIMORAFormats"
 
 [[source]]
 repository = "https://github.com/AIMORA-dev/AIMORALayout.jl.git"
 commit = "8ebd3a4223f7593c044bcc149730b1eb77fbbb19"
-target = "AIMORALayout.jl"
+target = "AIMORALayout"
 
 [[source]]
 repository = "https://github.com/AIMORA-dev/AIMORAService.jl.git"
 commit = "f5667be812e96e23bec5bda06a858d73fe7f43eb"
-target = "AIMORAService.jl"
+target = "AIMORAService"
 
 [[source]]
 repository = "https://github.com/AIMORA-dev/AIMORAVisuals.jl.git"
 commit = "0022b6952e61a0c6ed2111f4ff7a601a5ebd37ae"
-target = "AIMORAVisuals.jl"
+target = "AIMORAVisuals"
 
 [[source]]
 repository = "https://github.com/AIMORA-dev/AIMORAReporting.jl.git"
 commit = "80f7bbf8418791ede28d4a0f7b99af6700a1b920"
-target = "AIMORAReporting.jl"
+target = "AIMORAReporting"
 
 [[source]]
 repository = "https://github.com/AIMORA-dev/AIMORASymbols.git"
 commit = "8ec255e0396fe378e2f7db3cb00d25a35976b7b0"
-target = "AIMORASymbols.jl"
+target = "AIMORASymbols"

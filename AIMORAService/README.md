@@ -1,6 +1,6 @@
-# AIMORALayout.jl
+# AIMORAService
 
-`AIMORALayout.jl` is the minimal public owner reserved for deterministic graph projection, placement, hierarchy, orthogonal routing, overlap removal, and incremental view layout. Layout will own presentation only and will never alter physical-model semantics or hashes.
+`AIMORAService` is the minimal public owner reserved for the versioned process/API boundary used by Studio, VS Code, notebooks, and remote clients. It will transport public canonical commands and typed results without duplicating engineering semantics or exposing private solver internals.
 
 ## Licence
 

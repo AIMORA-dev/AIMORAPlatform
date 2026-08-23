@@ -2,17 +2,17 @@ schema = "aimora-platform-package-graph-v1"
 unknown_change = "test_all"
 
 [[package]]
-id = "AIMORAProject.jl"
-path = "AIMORAProject.jl"
+id = "AIMORAProject"
+path = "AIMORAProject"
 kind = "julia"
 name = "AIMORAProject"
 uuid = "6e87310f-3ba6-4e69-9b4a-8a1fcbcc0c12"
 version = "1.0.0"
-depends_on = ["AIMORAFormats.jl"]
+depends_on = ["AIMORAFormats"]
 
 [[package]]
-id = "AIMORAFormats.jl"
-path = "AIMORAFormats.jl"
+id = "AIMORAFormats"
+path = "AIMORAFormats"
 kind = "julia"
 name = "AIMORAFormats"
 uuid = "55f26d86-12d8-41b3-b163-188390d0187e"
@@ -20,8 +20,8 @@ version = "1.0.0"
 depends_on = []
 
 [[package]]
-id = "AIMORALayout.jl"
-path = "AIMORALayout.jl"
+id = "AIMORALayout"
+path = "AIMORALayout"
 kind = "julia"
 name = "AIMORALayout"
 uuid = "6f047e7d-bf2a-40ac-a20c-c55cfda68ba0"
@@ -29,8 +29,8 @@ version = "0.1.0"
 depends_on = []
 
 [[package]]
-id = "AIMORAService.jl"
-path = "AIMORAService.jl"
+id = "AIMORAService"
+path = "AIMORAService"
 kind = "julia"
 name = "AIMORAService"
 uuid = "54bbdfc6-6134-4d5a-90dd-4d1a26642ec2"
@@ -38,8 +38,8 @@ version = "0.1.0"
 depends_on = []
 
 [[package]]
-id = "AIMORAVisuals.jl"
-path = "AIMORAVisuals.jl"
+id = "AIMORAVisuals"
+path = "AIMORAVisuals"
 kind = "julia"
 name = "AIMORAVisuals"
 uuid = "60d64674-9081-4077-878f-44c1107ce075"
@@ -47,8 +47,8 @@ version = "0.1.0"
 depends_on = []
 
 [[package]]
-id = "AIMORAReporting.jl"
-path = "AIMORAReporting.jl"
+id = "AIMORAReporting"
+path = "AIMORAReporting"
 kind = "julia"
 name = "AIMORAReporting"
 uuid = "79e9649d-112a-4870-83df-912117092548"
@@ -56,8 +56,8 @@ version = "0.2.0"
 depends_on = []
 
 [[package]]
-id = "AIMORASymbols.jl"
-path = "AIMORASymbols.jl"
+id = "AIMORASymbols"
+path = "AIMORASymbols"
 kind = "content"
 name = "aimora-public-symbols"
 version = "0.1.0"

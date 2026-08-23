@@ -1,6 +1,6 @@
-# AIMORAVisuals.jl
+# AIMORALayout
 
-`AIMORAVisuals.jl` is the minimal public owner reserved for backend-neutral table, plot, diagram-overlay, theme, units, accessibility, export, provenance, and visual-QA contracts. It owns presentation semantics, not study equations or solver arrays.
+`AIMORALayout` is the minimal public owner reserved for deterministic graph projection, placement, hierarchy, orthogonal routing, overlap removal, and incremental view layout. Layout will own presentation only and will never alter physical-model semantics or hashes.
 
 ## Licence
 

@@ -12,7 +12,7 @@ using TOML
     @test project["compat"]["julia"] == "1.10"
     @test Set(keys(project["extras"])) == Set(["Test", "TOML"])
     @test Set(project["targets"]["test"]) == Set(["Test", "TOML"])
-    @test project["sources"]["AIMORAFormats"]["path"] == "../AIMORAFormats.jl"
+    @test project["sources"]["AIMORAFormats"]["path"] == "../AIMORAFormats"
 
     ambiguities = Test.detect_ambiguities(AIMORAProject; recursive = true)
     @test isempty(ambiguities)

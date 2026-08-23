@@ -35,13 +35,13 @@ jobs:
       fail-fast: false
       matrix:
         package:
-          - AIMORAProject.jl
-          - AIMORAFormats.jl
-          - AIMORALayout.jl
-          - AIMORAService.jl
-          - AIMORAVisuals.jl
-          - AIMORAReporting.jl
-          - AIMORASymbols.jl
+          - AIMORAProject
+          - AIMORAFormats
+          - AIMORALayout
+          - AIMORAService
+          - AIMORAVisuals
+          - AIMORAReporting
+          - AIMORASymbols
     steps:
       - uses: actions/checkout@v4
         with:
@@ -51,13 +51,13 @@ jobs:
           version: '1.10'
       - uses: julia-actions/cache@v2
       - name: Prepare sibling package dependencies
-        if: matrix.package == 'AIMORAProject.jl'
-        run: julia --startup-file=no --project="${{ matrix.package }}" -e 'using Pkg; Pkg.develop(path="AIMORAFormats.jl")'
+        if: matrix.package == 'AIMORAProject'
+        run: julia --startup-file=no --project="${{ matrix.package }}" -e 'using Pkg; Pkg.develop(path="AIMORAFormats")'
       - name: Julia package tests
-        if: matrix.package != 'AIMORASymbols.jl'
+        if: matrix.package != 'AIMORASymbols'
         run: julia --startup-file=no --project="${{ matrix.package }}" -e 'using Pkg; Pkg.test()'
       - name: Symbol library tests
-        if: matrix.package == 'AIMORASymbols.jl'
+        if: matrix.package == 'AIMORASymbols'
         run: julia --startup-file=no "${{ matrix.package }}/tests/runtests.jl"
 
   cross-platform:
@@ -80,10 +80,10 @@ jobs:
         shell: bash
         run: |
           julia --startup-file=no test/runtests.jl
-          julia --startup-file=no --project=AIMORAFormats.jl -e 'using Pkg; Pkg.test()'
-          julia --startup-file=no --project=AIMORAProject.jl -e 'using Pkg; Pkg.develop(path="AIMORAFormats.jl"); Pkg.test()'
-          julia --startup-file=no --project=AIMORALayout.jl -e 'using Pkg; Pkg.test()'
-          julia --startup-file=no --project=AIMORAService.jl -e 'using Pkg; Pkg.test()'
-          julia --startup-file=no --project=AIMORAVisuals.jl -e 'using Pkg; Pkg.test()'
-          julia --startup-file=no --project=AIMORAReporting.jl -e 'using Pkg; Pkg.test()'
-          julia --startup-file=no AIMORASymbols.jl/tests/runtests.jl
+          julia --startup-file=no --project=AIMORAFormats -e 'using Pkg; Pkg.test()'
+          julia --startup-file=no --project=AIMORAProject -e 'using Pkg; Pkg.develop(path="AIMORAFormats"); Pkg.test()'
+          julia --startup-file=no --project=AIMORALayout -e 'using Pkg; Pkg.test()'
+          julia --startup-file=no --project=AIMORAService -e 'using Pkg; Pkg.test()'
+          julia --startup-file=no --project=AIMORAVisuals -e 'using Pkg; Pkg.test()'
+          julia --startup-file=no --project=AIMORAReporting -e 'using Pkg; Pkg.test()'
+          julia --startup-file=no AIMORASymbols/tests/runtests.jl

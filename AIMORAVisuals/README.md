@@ -1,6 +1,6 @@
-# AIMORAService.jl
+# AIMORAVisuals
 
-`AIMORAService.jl` is the minimal public owner reserved for the versioned process/API boundary used by Studio, VS Code, notebooks, and remote clients. It will transport public canonical commands and typed results without duplicating engineering semantics or exposing private solver internals.
+`AIMORAVisuals` is the minimal public owner reserved for backend-neutral table, plot, diagram-overlay, theme, units, accessibility, export, provenance, and visual-QA contracts. It owns presentation semantics, not study equations or solver arrays.
 
 ## Licence
 
