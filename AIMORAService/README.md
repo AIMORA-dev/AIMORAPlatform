@@ -1,6 +1,38 @@
 # AIMORAService
 
-`AIMORAService` is the minimal public owner reserved for the versioned process/API boundary used by Studio, VS Code, notebooks, and remote clients. It will transport public canonical commands and typed results without duplicating engineering semantics or exposing private solver internals.
+`AIMORAService` is the public Julia owner for the versioned process/API boundary used by the native AIMORAStudio client, notebooks, automation, and separately admitted future clients. It transports canonical commands, schemas, readiness, jobs, typed results, visual queries, report requests, and artifacts without duplicating engineering semantics or exposing private solver internals.
+
+## Native desktop boundary
+
+The accepted first-release process model is:
+
+```text
+AIMORAStudio C++/Qt process
+        |
+        | authenticated local socket or named pipe
+        v
+AIMORAService.jl
+        |
+        | bounded worker protocol
+        v
+AIMORA study worker using AIMORA.jl and AIMORASolvers.jl
+```
+
+The lightweight service starts lazily when a project or engineering command requires it. Solver-heavy workers start only for accepted requested studies or remain in a bounded pool. The first release does not embed `libjulia` into the GUI process.
+
+The service owns:
+
+- capability and protocol-version negotiation;
+- project sessions, exact revisions, transactions, validation, and typed errors;
+- schema-driven inspector queries and affected-object patches;
+- study preparation, status, progress, cancellation, checkpoint, restore, and worker lifecycle;
+- bounded binary and windowed result access;
+- visual, drawing-publication, DXF, and report requests routed to canonical owners;
+- restart, idempotency, ordering, authentication hooks, path confinement, and leakage prevention.
+
+It does not own physical equations already assigned to `AIMORA.jl`, private numerical kernels, client rendering state, or a second project model.
+
+No pointer event and no numerical timestep is a service message. The client commits one completed canonical edit at a time; a study returns bounded progress, significant events, selected live summaries, event-preserving display windows, and immutable artifact references.
 
 ## Licence
 
