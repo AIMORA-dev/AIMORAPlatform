@@ -398,6 +398,17 @@ export AddDefinitionInstancePatch,
     reusable_definition,
     validate_hierarchy
 
+export CatalogPartLine,
+    CatalogCrossReferenceSpec,
+    CatalogAssemblyMemberSpec,
+    CatalogAssemblySpec,
+    CatalogInstanceCrossReference,
+    CatalogMaterializedInstance,
+    CatalogAssemblyMaterialization,
+    CatalogPartsRow,
+    materialize_catalog_assembly,
+    catalog_parts_schedule
+
 export AddControlBlockSchemaPatch,
     AddControlNetworkPatch,
     AlgebraicLoopError,
@@ -754,6 +765,7 @@ include("asset_validation.jl")
 include("control_validation.jl")
 include("hierarchy_validation.jl")
 include("hierarchy_expansion.jl")
+include("catalog_instantiation.jl")
 include("revisions.jl")
 include("drawing_patches.jl")
 include("drawing_serialization.jl")
