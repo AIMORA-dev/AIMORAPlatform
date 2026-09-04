@@ -171,5 +171,6 @@ function without_result_cache(project::CanonicalProject)
         project.control_system,
         project.event_scenarios,
         model,
+        project.drawings,
     )
 end

@@ -212,6 +212,7 @@ function semantic_canonical_form(project::CanonicalProject, layer::SemanticHashL
         payload = (
             records = CanonicalRecord[item for item in project.records if item.identity.id in view_ids],
             projections = project.graphs.view_projections,
+            drawings = project.drawings,
         )
         return _semantic_signature(project, payload, layer)
     end
@@ -226,6 +227,7 @@ function semantic_canonical_form(project::CanonicalProject, layer::SemanticHashL
         controls = project.control_system,
         events_scenarios = project.event_scenarios,
         orchestration = _orchestration_without_results(project.orchestration),
+        drawings = project.drawings,
     )
     return _semantic_signature(project, payload, layer)
 end

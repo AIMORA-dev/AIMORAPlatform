@@ -147,6 +147,7 @@ function _apply_patch(project::CanonicalProject, patch::AddRecordPatch)
         project.event_scenarios,
         project.orchestration,
         ProjectUnverified,
+        project.drawings,
     )
     return updated, _record_effect(patch.record.identity.id)
 end
@@ -168,6 +169,7 @@ function _apply_patch(project::CanonicalProject, patch::RemoveRecordPatch)
         project.event_scenarios,
         project.orchestration,
         ProjectUnverified,
+        project.drawings,
     )
     return updated, _record_effect(patch.owner)
 end
@@ -232,6 +234,7 @@ function _apply_patch(project::CanonicalProject, patch::UnsafeReplaceRecordsPatc
         project.control_system,
         project.event_scenarios,
         project.orchestration,
+        project.drawings,
     )
     owner = project.metadata.identity.id
     effect = CommandEffect(owner, DependencyInvalidation(owner, [InvalidateAllResults, InvalidateViews]))
@@ -320,6 +323,12 @@ function _patch_signature(patch::ProjectPatch)
         return "unset:" * patch.owner.value * ":" * patch.field_name
     elseif patch isa SetProjectNamePatch
         return "project-name"
+    elseif patch isa AddDrawingRecordPatch
+        return "drawing-add:" * patch.record.identity.id.value
+    elseif patch isa ReplaceDrawingRecordPatch
+        return "drawing-replace:" * patch.record.identity.id.value
+    elseif patch isa RemoveDrawingRecordPatch
+        return "drawing-remove:" * patch.owner.value
     end
     return "unsafe-replace-records"
 end
@@ -379,6 +388,12 @@ function _declared_patch_effect(project::CanonicalProject, patch::ProjectPatch)
     elseif patch isa SetProjectNamePatch
         owner = project.metadata.identity.id
         return CommandEffect(owner, DependencyInvalidation(owner, [InvalidateViews]))
+    elseif patch isa AddDrawingRecordPatch
+        return _drawing_effect(patch.record.identity.id)
+    elseif patch isa ReplaceDrawingRecordPatch
+        return _drawing_effect(patch.record.identity.id)
+    elseif patch isa RemoveDrawingRecordPatch
+        return _drawing_effect(patch.owner)
     end
     owner = project.metadata.identity.id
     return CommandEffect(owner, DependencyInvalidation(owner, [InvalidateAllResults, InvalidateViews]))

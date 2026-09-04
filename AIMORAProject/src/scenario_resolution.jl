@@ -95,6 +95,7 @@ function _project_without_scenarios(project::CanonicalProject)
         model,
         project.orchestration,
         ProjectUnverified,
+        project.drawings,
     )
 end
 
@@ -119,6 +120,7 @@ function _verified_materialized_scenario_project(
         project.control_system,
         source_project.event_scenarios,
         project.orchestration,
+        project.drawings,
     )
     validate_orchestration(orchestration_context; scenario_source = source_project)
     return CanonicalProject(
@@ -133,6 +135,7 @@ function _verified_materialized_scenario_project(
         project.event_scenarios,
         project.orchestration,
         ProjectVerified,
+        project.drawings,
     )
 end
 

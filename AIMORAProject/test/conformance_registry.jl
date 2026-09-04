@@ -7,6 +7,7 @@ const MANDATORY_PROJECT_TARGETS = (
     ProjectConformanceTarget(:canonical_primitives_schemas, "test/schema_registry.jl"),
     ProjectConformanceTarget(:revisions_transactions, "test/transactions.jl"),
     ProjectConformanceTarget(:graph_domains_topology, "test/graphs.jl"),
+    ProjectConformanceTarget(:drawing_model, "test/drawing_model.jl"),
     ProjectConformanceTarget(:assets_realizations_data, "test/assets.jl"),
     ProjectConformanceTarget(:definitions_instances, "test/hierarchy.jl"),
     ProjectConformanceTarget(:control_networks, "test/controls.jl"),

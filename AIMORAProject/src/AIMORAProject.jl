@@ -49,6 +49,44 @@ export AllowedStringConstraint,
     GraphNodeElement,
     GraphPortElement,
     GraphViewProjectionElement,
+    AddDrawingRecordPatch,
+    CanonicalDrawingRecord,
+    DrawingBlockDefinition,
+    DrawingCoordinate,
+    DrawingDocument,
+    DrawingEntity,
+    DrawingGeometryLock,
+    DrawingLayer,
+    DrawingLabel,
+    DrawingLineStyle,
+    DrawingLock,
+    DrawingLockAspect,
+    DrawingModelSpace,
+    DrawingPaperSpace,
+    DrawingPlotStyle,
+    DrawingPositionLock,
+    DrawingContentLock,
+    DrawingVisibilityLock,
+    DrawingDimensionStyle,
+    DrawingProjection,
+    DrawingRoute,
+    DrawingSheet,
+    DrawingSpace,
+    DrawingStyle,
+    DrawingStyleKind,
+    DrawingStyleProperty,
+    DrawingStyleValue,
+    DrawingTextStyle,
+    DrawingView,
+    DrawingViewport,
+    DrawingWorkspace,
+    RemoveDrawingRecordPatch,
+    ReplaceDrawingRecordPatch,
+    drawing_record,
+    drawing_workspace_ids,
+    validate_drawing_replay_identity,
+    validate_drawing_rollback_identity,
+    validate_drawing_workspace,
     IdentifiedName,
     InvalidateAllResults,
     InvalidateStudyResults,
@@ -703,6 +741,7 @@ include("asset_types.jl")
 include("control_types.jl")
 include("hierarchy_types.jl")
 include("patch_types.jl")
+include("drawing_model.jl")
 include("event_scenario_types.jl")
 include("study_types.jl")
 include("extension_declarations.jl")
@@ -716,6 +755,7 @@ include("control_validation.jl")
 include("hierarchy_validation.jl")
 include("hierarchy_expansion.jl")
 include("revisions.jl")
+include("drawing_patches.jl")
 include("graph_patches.jl")
 include("asset_patches.jl")
 include("hierarchy_patches.jl")

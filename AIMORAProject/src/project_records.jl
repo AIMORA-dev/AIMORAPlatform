@@ -85,6 +85,7 @@ struct CanonicalProject
     control_system::ControlSystem
     event_scenarios::EventScenarioModel
     orchestration::OrchestrationModel
+    drawings::DrawingWorkspace
     verification::ProjectVerificationState
 
     function CanonicalProject(
@@ -99,6 +100,7 @@ struct CanonicalProject
         event_scenarios::EventScenarioModel,
         orchestration::OrchestrationModel,
         verification::ProjectVerificationState,
+        drawings::DrawingWorkspace = DrawingWorkspace(),
     )
         copied = sort!(collect(records); by = record -> record.identity.id.value)
         ids = getfield.(getfield.(copied, :identity), :id)
@@ -115,6 +117,7 @@ struct CanonicalProject
             control_system,
             event_scenarios,
             orchestration,
+            drawings,
             verification,
         )
     end
@@ -194,6 +197,7 @@ Base.:(==)(left::CanonicalProject, right::CanonicalProject) =
     left.control_system == right.control_system &&
     left.event_scenarios == right.event_scenarios &&
     left.orchestration == right.orchestration &&
+    left.drawings == right.drawings &&
     left.verification == right.verification
 
 function _validate_record(project::CanonicalProject, record::CanonicalRecord)
@@ -227,6 +231,7 @@ function validate_project(project::CanonicalProject)
     validate_control_system(project)
     validate_orchestration(project)
     validate_event_scenario_model(project)
+    validate_drawing_workspace(project, project.drawings)
     return true
 end
 
@@ -246,6 +251,7 @@ function verified_project(project::CanonicalProject)
         project.event_scenarios,
         project.orchestration,
         ProjectVerified,
+        project.drawings,
     )
 end
 
@@ -261,7 +267,8 @@ unsafe_project(
     control_system::ControlSystem = ControlSystem(),
     event_scenarios::EventScenarioModel = EventScenarioModel(),
     orchestration::OrchestrationModel = OrchestrationModel(),
-) = CanonicalProject(metadata, registry, units, records, graphs, asset_library, hierarchy, control_system, event_scenarios, orchestration, ProjectUnverified)
+    drawings::DrawingWorkspace = DrawingWorkspace(),
+ ) = CanonicalProject(metadata, registry, units, records, graphs, asset_library, hierarchy, control_system, event_scenarios, orchestration, ProjectUnverified, drawings)
 
 function CanonicalProject(
     metadata::ProjectMetadata,
@@ -274,8 +281,9 @@ function CanonicalProject(
     control_system::ControlSystem = ControlSystem(),
     event_scenarios::EventScenarioModel = EventScenarioModel(),
     orchestration::OrchestrationModel = OrchestrationModel(),
+    drawings::DrawingWorkspace = DrawingWorkspace(),
 )
-    return verified_project(unsafe_project(metadata, registry, units, records, graphs, asset_library, hierarchy, control_system, event_scenarios, orchestration))
+    return verified_project(unsafe_project(metadata, registry, units, records, graphs, asset_library, hierarchy, control_system, event_scenarios, orchestration, drawings))
 end
 
 function project_record(project::CanonicalProject, id::ProjectId)
@@ -301,6 +309,7 @@ function _replace_project_record(project::CanonicalProject, replacement::Canonic
         project.event_scenarios,
         project.orchestration,
         ProjectUnverified,
+        project.drawings,
     )
 end
 
@@ -317,6 +326,7 @@ function _replace_project_metadata(project::CanonicalProject, metadata::ProjectM
         project.event_scenarios,
         project.orchestration,
         ProjectUnverified,
+        project.drawings,
     )
 end
 
@@ -333,6 +343,7 @@ function _replace_project_graphs(project::CanonicalProject, graphs::SemanticGrap
         project.event_scenarios,
         project.orchestration,
         ProjectUnverified,
+        project.drawings,
     )
 end
 
@@ -349,6 +360,7 @@ function _replace_asset_library(project::CanonicalProject, asset_library::AssetL
         project.event_scenarios,
         project.orchestration,
         ProjectUnverified,
+        project.drawings,
     )
 end
 
@@ -365,6 +377,7 @@ function _replace_hierarchy(project::CanonicalProject, hierarchy::HierarchyModel
         project.event_scenarios,
         project.orchestration,
         ProjectUnverified,
+        project.drawings,
     )
 end
 
@@ -381,6 +394,7 @@ function _replace_control_system(project::CanonicalProject, control_system::Cont
         project.event_scenarios,
         project.orchestration,
         ProjectUnverified,
+        project.drawings,
     )
 end
 
@@ -397,6 +411,7 @@ function _replace_event_scenarios(project::CanonicalProject, event_scenarios::Ev
         event_scenarios,
         project.orchestration,
         ProjectUnverified,
+        project.drawings,
     )
 end
 
@@ -413,5 +428,23 @@ function _replace_orchestration(project::CanonicalProject, orchestration::Orches
         project.event_scenarios,
         orchestration,
         ProjectUnverified,
+        project.drawings,
+    )
+end
+
+function _replace_project_drawings(project::CanonicalProject, drawings::DrawingWorkspace)
+    return CanonicalProject(
+        project.metadata,
+        project.registry,
+        project.units,
+        collect(project.records),
+        project.graphs,
+        project.asset_library,
+        project.hierarchy,
+        project.control_system,
+        project.event_scenarios,
+        project.orchestration,
+        ProjectUnverified,
+        drawings,
     )
 end

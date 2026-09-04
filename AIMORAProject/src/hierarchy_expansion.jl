@@ -394,6 +394,7 @@ function expand_instance(project::CanonicalProject, instance::DefinitionInstance
         combined_controls,
         project.event_scenarios,
         project.orchestration,
+        project.drawings,
     )
     foreach(record -> _validate_record(temporary, record), expanded.records)
     validate_graphs(temporary)
