@@ -204,6 +204,13 @@ end
         ),
     )
     @test locked.position == coordinate(-100, 0)
+
+    initial_result = layout_project(
+        first_result.project,
+        LayoutRequest(view, layer, provenance; mode = LayoutInitial),
+    )
+    @test project_view_hash(initial_result.project) ==
+          project_view_hash(first_result.project)
 end
 
 @testset "local scope and manual preservation" begin

@@ -62,6 +62,45 @@ using AIMORAService
         @test received[]["semantic_ids"] == ["port.source", "port.target"]
         @test received[]["points"] == [[10.0, 20.0], [30.0, 40.0]]
 
+        for operation in ("layout.initial", "layout.full")
+            whole_view = copy(parameters)
+            whole_view["base_revision"] = revision[]
+            whole_view["transaction_id"] = "studio-$operation"
+            whole_view["operation"] = operation
+            whole_view["semantic_ids"] = Any[]
+            whole_view["points"] = Any[]
+            committed = AIMORAService.dispatch_request!(
+                state,
+                "request-$operation",
+                "semantic.commit",
+                whole_view,
+            )
+            @test committed.result["status"] == "accepted"
+            @test received[]["operation"] == operation
+            @test isempty(received[]["semantic_ids"])
+        end
+
+        for operation in ("layout.local", "layout.incremental")
+            focused = copy(parameters)
+            focused["base_revision"] = revision[]
+            focused["transaction_id"] = "studio-$operation"
+            focused["operation"] = operation
+            focused["semantic_ids"] = Any[]
+            error = try
+                AIMORAService.dispatch_request!(
+                    state,
+                    "request-$operation",
+                    "semantic.commit",
+                    focused,
+                )
+                nothing
+            catch exception
+                exception
+            end
+            @test error isa AIMORAService.ServiceError
+            @test error.code == "INVALID_REQUEST"
+        end
+
         duplicate_ids = copy(parameters)
         duplicate_ids["base_revision"] = revision[]
         duplicate_ids["semantic_ids"] = Any["port.source", "port.source"]

@@ -1002,7 +1002,10 @@ function _layout_workspace(project::CanonicalProject, request::LayoutRequest)
         labels = _merge_records(project.drawings.labels, label_records),
         locks = collect(project.drawings.locks),
     )
-    workspace = _materialize_pages(workspace, drawing_view, pages, request)
+    no_initial_placement_change =
+        request.mode == LayoutInitial && all(placement -> !placement.moved, placements)
+    no_initial_placement_change ||
+        (workspace = _materialize_pages(workspace, drawing_view, pages, request))
     plan = LayoutPlan(
         request.mode,
         request.view,

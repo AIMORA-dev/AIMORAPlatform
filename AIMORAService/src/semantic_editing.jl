@@ -38,11 +38,13 @@ function _required_semantic_revision(parameters::AbstractDict)
     return revision
 end
 
-function _required_semantic_ids(state, parameters::AbstractDict)
+function _required_semantic_ids(state, parameters::AbstractDict; allow_empty::Bool = false)
     values = get(parameters, "semantic_ids", nothing)
     values isa AbstractVector ||
         throw(ServiceError("INVALID_REQUEST", "Semantic identities must be an array."))
-    0 < length(values) <= state.configuration.limits.max_semantic_ids ||
+    isempty(values) && !allow_empty &&
+        throw(ServiceError("INVALID_REQUEST", "The semantic edit requires an identity."))
+    length(values) <= state.configuration.limits.max_semantic_ids ||
         throw(ServiceError("RESOURCE_TOO_LARGE", "Semantic identity count is invalid."))
     ids = String[
         _required_string(Dict{String,Any}("id" => value), "id"; maximum_bytes = 1024)
@@ -96,6 +98,10 @@ const _SEMANTIC_EDIT_OPERATIONS = Set([
     "projection.remove",
     "asset.delete",
     "cross_reference.update",
+    "layout.initial",
+    "layout.full",
+    "layout.local",
+    "layout.incremental",
 ])
 
 function _bounded_semantic_edit_result(state, result)
@@ -121,13 +127,15 @@ function _commit_semantic_edit(state, parameters::AbstractDict)
     operation = _required_string(parameters, "operation"; maximum_bytes = 64)
     operation in _SEMANTIC_EDIT_OPERATIONS ||
         throw(ServiceError("INVALID_REQUEST", "The semantic-edit operation is unsupported."))
+    whole_view_layout = operation in ("layout.initial", "layout.full")
     request = Dict{String,Any}(
         "project_id" => project_id,
         "base_revision" => _required_semantic_revision(parameters),
         "transaction_id" =>
             _required_string(parameters, "transaction_id"; maximum_bytes = 128),
         "operation" => operation,
-        "semantic_ids" => _required_semantic_ids(state, parameters),
+        "semantic_ids" =>
+            _required_semantic_ids(state, parameters; allow_empty = whole_view_layout),
         "points" => _required_display_points(state, parameters),
         "attributes" => _optional_semantic_attributes(state, parameters),
     )
