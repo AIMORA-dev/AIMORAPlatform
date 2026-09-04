@@ -13,6 +13,7 @@ const MANDATORY_FORMAT_TARGETS = (
     FormatConformanceTarget(:project_documents, "test/project_documents.jl"),
     FormatConformanceTarget(:generic_imports, "test/import_plans.jl"),
     FormatConformanceTarget(:native_migrations, "test/native_migrations.jl"),
+    FormatConformanceTarget(:native_drawing_documents, "test/drawing_documents.jl"),
     FormatConformanceTarget(:release_boundary, "test/release_boundary.jl"),
 )
 

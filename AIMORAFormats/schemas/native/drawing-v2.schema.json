@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.aimora.dev/native/drawing-v2.schema.json",
+  "title": "AIMORA native drawing document",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "schema_version", "project_id", "drawing", "symbols", "caches"],
+  "properties": {
+    "format": {"const": "aimora-drawing"},
+    "schema_version": {"const": "2.0.0"},
+    "project_id": {"type": "string"},
+    "drawing": {"type": "object"},
+    "symbols": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/symbol"}
+    },
+    "caches": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/cache"}
+    }
+  },
+  "$defs": {
+    "symbol": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner_id", "symbol_id", "library_id", "content_sha256", "state", "level_of_detail"],
+      "properties": {
+        "owner_id": {"type": "string"},
+        "symbol_id": {"type": "string"},
+        "library_id": {"type": "string"},
+        "content_sha256": {"type": "string"},
+        "state": {"type": "string"},
+        "level_of_detail": {"type": "string"}
+      }
+    },
+    "cache": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "content_sha256"],
+      "properties": {
+        "path": {"type": "string"},
+        "content_sha256": {"type": "string"}
+      }
+    }
+  }
+}

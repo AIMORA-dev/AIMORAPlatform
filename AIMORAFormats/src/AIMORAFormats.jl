@@ -278,5 +278,6 @@ include("restricted_expressions.jl")
 include("project_documents.jl")
 include("import_plans.jl")
 include("native_migrations.jl")
+include("drawing_documents.jl")
 
 end
