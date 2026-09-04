@@ -1,6 +1,10 @@
 # AIMORALayout
 
-`AIMORALayout` is the minimal public owner reserved for deterministic graph projection, placement, hierarchy, orthogonal routing, overlap removal, and incremental view layout. Layout will own presentation only and will never alter physical-model semantics or hashes.
+`AIMORALayout` generates deterministic presentation geometry for canonical AIMORA drawings.
+
+The engine reads connectivity only from explicit semantic view projections, ports, and physical connections. It provides initial, full, local, and incremental layout; stable integer-grid placement; repeated-bay alignment and boundaries; orthogonal routes; collision-reduced labels; deterministic page splitting; and preservation of locked, manual, or out-of-scope records.
+
+`layout_project` returns a new canonical project and refuses the result unless its physics hash is identical to the input. Geometry is never interpreted as electrical topology.
 
 ## Licence
 
