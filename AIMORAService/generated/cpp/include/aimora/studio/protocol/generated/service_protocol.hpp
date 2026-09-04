@@ -11,13 +11,13 @@
 namespace aimora::studio::protocol::generated {
 
 inline constexpr std::string_view protocolVersion{
-    "1.0"
+    "1.1"
 };
 inline constexpr std::string_view serviceVersion{
-    "0.1.0"
+    "0.2.0"
 };
 inline constexpr std::string_view schemaSha256{
-    "ebf63b6e991532dc1fa7b32f660d6050708a8dd03243b03ce95ae98a2a02c8a8"
+    "f20a87f79c6a04be59c9e4971753b480dd0a0b3eb09ed2dfce657b4ad02fac38"
 };
 inline constexpr std::string_view frameMagic{
     "AMR1"
@@ -34,6 +34,10 @@ enum class Method {
     ProjectOpen,
     ProjectDescribe,
     ProjectClose,
+    InspectorDescribe,
+    InspectorCommit,
+    InspectorUndo,
+    InspectorRedo,
     ArtifactOpen,
     ResultWindow,
     RequestCancel,
@@ -45,8 +49,10 @@ enum class Method {
 [[nodiscard]] QString methodName(Method method);
 [[nodiscard]] std::optional<Method> parseMethod(QStringView value);
 
-inline constexpr std::array<std::string_view, 9> capabilities{
+inline constexpr std::array<std::string_view, 11> capabilities{
     "artifact.reference",
+    "inspector.schema",
+    "inspector.transaction",
     "project.reference",
     "request.cancel",
     "result.binary-window",
@@ -57,7 +63,7 @@ inline constexpr std::array<std::string_view, 9> capabilities{
     "worker.lifecycle",
 };
 
-inline constexpr std::array<std::string_view, 15> errorCodes{
+inline constexpr std::array<std::string_view, 18> errorCodes{
     "AUTHENTICATION_REQUIRED",
     "AUTHENTICATION_FAILED",
     "PROTOCOL_VERSION_UNSUPPORTED",
@@ -72,6 +78,9 @@ inline constexpr std::array<std::string_view, 15> errorCodes{
     "WORKER_UNAVAILABLE",
     "WORKER_LIMIT_REACHED",
     "WORKER_NOT_FOUND",
+    "INSPECTOR_SCHEMA_UNAVAILABLE",
+    "INSPECTOR_VALIDATION_REJECTED",
+    "REVISION_CONFLICT",
     "INTERNAL_ERROR",
 };
 

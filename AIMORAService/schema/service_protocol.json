@@ -1,7 +1,7 @@
 {
   "schema": "aimora.service.protocol.v1",
-  "protocol_version": "1.0",
-  "service_version": "0.1.0",
+  "protocol_version": "1.1",
+  "service_version": "0.2.0",
   "frame": {
     "magic": "AMR1",
     "header_bytes": 12,
@@ -17,7 +17,11 @@
     "project_bytes": 67108864,
     "artifact_bytes": 268435456,
     "window_bytes": 16777216,
-    "workers": 2
+    "workers": 2,
+    "inspector_sections": 64,
+    "inspector_fields": 4096,
+    "inspector_edits": 4096,
+    "inspector_table_rows": 100000
   },
   "methods": [
     {
@@ -60,6 +64,30 @@
       "id": "project.close",
       "cpp_name": "ProjectClose",
       "capability": "project.reference",
+      "response": "control"
+    },
+    {
+      "id": "inspector.describe",
+      "cpp_name": "InspectorDescribe",
+      "capability": "inspector.schema",
+      "response": "control"
+    },
+    {
+      "id": "inspector.commit",
+      "cpp_name": "InspectorCommit",
+      "capability": "inspector.transaction",
+      "response": "control"
+    },
+    {
+      "id": "inspector.undo",
+      "cpp_name": "InspectorUndo",
+      "capability": "inspector.transaction",
+      "response": "control"
+    },
+    {
+      "id": "inspector.redo",
+      "cpp_name": "InspectorRedo",
+      "capability": "inspector.transaction",
       "response": "control"
     },
     {
@@ -114,6 +142,9 @@
     "WORKER_UNAVAILABLE",
     "WORKER_LIMIT_REACHED",
     "WORKER_NOT_FOUND",
+    "INSPECTOR_SCHEMA_UNAVAILABLE",
+    "INSPECTOR_VALIDATION_REJECTED",
+    "REVISION_CONFLICT",
     "INTERNAL_ERROR"
   ]
 }

@@ -455,7 +455,7 @@ end
         shutdown_status == :ok || error("local service did not stop within the bounded timeout")
         fetch(server_task)
         ready_text = String(take!(ready_output))
-        @test occursin("AIMORA_SERVICE_READY\t1.0\t", ready_text)
+        @test occursin("AIMORA_SERVICE_READY\t1.1\t", ready_text)
         if !Sys.iswindows()
             @test !ispath(endpoint)
         end

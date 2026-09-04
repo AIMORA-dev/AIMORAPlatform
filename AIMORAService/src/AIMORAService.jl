@@ -13,6 +13,7 @@ include("types.jl")
 include("framing.jl")
 include("security.jl")
 include("workers.jl")
+include("inspection.jl")
 include("server.jl")
 include("cli.jl")
 include("generator.jl")
@@ -27,6 +28,7 @@ export BINARY_FRAME,
        WORKER_PROTOCOL_VERSION,
        Frame,
        FrameKind,
+       InspectionProvider,
        PathPolicy,
        ServiceConfiguration,
        ServiceError,
@@ -40,9 +42,11 @@ export BINARY_FRAME,
        encode_control_message,
        encode_frame,
        generate_cpp_bindings,
+       register_inspection_provider!,
        read_frame,
        run_cli,
        serve,
+       unregister_inspection_provider!,
        write_frame
 
 end

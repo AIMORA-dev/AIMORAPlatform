@@ -6,4 +6,7 @@ include("runtests_gui040_base.jl")
 @info "AIMORAService GUI040 test phase" phase = "worker-supervision-recovery"
 include("worker_supervision.jl")
 
+@info "AIMORAService inspector test phase" phase = "schema-transaction-history"
+include("inspector_transactions.jl")
+
 @info "AIMORAService GUI040 test phase" phase = "complete"

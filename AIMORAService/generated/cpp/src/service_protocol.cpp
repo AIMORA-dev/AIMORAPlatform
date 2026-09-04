@@ -20,6 +20,14 @@ QString methodName(Method method) {
         return QStringLiteral("project.describe");
     case Method::ProjectClose:
         return QStringLiteral("project.close");
+    case Method::InspectorDescribe:
+        return QStringLiteral("inspector.describe");
+    case Method::InspectorCommit:
+        return QStringLiteral("inspector.commit");
+    case Method::InspectorUndo:
+        return QStringLiteral("inspector.undo");
+    case Method::InspectorRedo:
+        return QStringLiteral("inspector.redo");
     case Method::ArtifactOpen:
         return QStringLiteral("artifact.open");
     case Method::ResultWindow:
@@ -57,6 +65,18 @@ std::optional<Method> parseMethod(QStringView value) {
     }
     if(value == QStringView{u"project.close"}) {
         return Method::ProjectClose;
+    }
+    if(value == QStringView{u"inspector.describe"}) {
+        return Method::InspectorDescribe;
+    }
+    if(value == QStringView{u"inspector.commit"}) {
+        return Method::InspectorCommit;
+    }
+    if(value == QStringView{u"inspector.undo"}) {
+        return Method::InspectorUndo;
+    }
+    if(value == QStringView{u"inspector.redo"}) {
+        return Method::InspectorRedo;
     }
     if(value == QStringView{u"artifact.open"}) {
         return Method::ArtifactOpen;

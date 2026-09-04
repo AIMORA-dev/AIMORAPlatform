@@ -22,6 +22,7 @@ mutable struct ServiceState
     artifacts::Dict{String,ArtifactRecord}
     cancelled_requests::Set{String}
     workers::WorkerSupervisor
+    inspection_providers::Dict{String,InspectionProvider}
     shutting_down::Bool
 end
 
@@ -35,6 +36,7 @@ function ServiceState(configuration::ServiceConfiguration)
         Dict{String,ArtifactRecord}(),
         Set{String}(),
         WorkerSupervisor(configuration.worker_command, configuration.limits.max_workers),
+        Dict{String,InspectionProvider}(),
         false,
     )
 end
@@ -186,6 +188,7 @@ function _close_project!(state::ServiceState, parameters::AbstractDict)
     project_id = _required_string(parameters, "project_id"; maximum_bytes = 128)
     pop!(state.projects, project_id, nothing) === nothing &&
         throw(ServiceError("RESOURCE_NOT_FOUND", "The requested project is not open."))
+    unregister_inspection_provider!(state, project_id)
     return Dict{String,Any}("project_id" => project_id, "closed" => true)
 end
 
@@ -292,6 +295,12 @@ function dispatch_request!(
                     "pending_requests" => state.configuration.limits.max_pending_requests,
                     "window_bytes" => state.configuration.limits.max_window_bytes,
                     "workers" => state.configuration.limits.max_workers,
+                    "inspector_sections" =>
+                        state.configuration.limits.max_inspector_sections,
+                    "inspector_fields" => state.configuration.limits.max_inspector_fields,
+                    "inspector_edits" => state.configuration.limits.max_inspector_edits,
+                    "inspector_table_rows" =>
+                        state.configuration.limits.max_inspector_table_rows,
                 ),
             ),
         )
@@ -313,6 +322,14 @@ function dispatch_request!(
         return ServiceReply(result = _describe_project(state, parameters))
     elseif method == "project.close"
         return ServiceReply(result = _close_project!(state, parameters))
+    elseif method == "inspector.describe"
+        return ServiceReply(result = _describe_inspection(state, parameters))
+    elseif method == "inspector.commit"
+        return ServiceReply(result = _commit_inspection(state, parameters))
+    elseif method == "inspector.undo"
+        return ServiceReply(result = _history_inspection(state, parameters, :undo))
+    elseif method == "inspector.redo"
+        return ServiceReply(result = _history_inspection(state, parameters, :redo))
     elseif method == "artifact.open"
         return ServiceReply(result = _open_artifact!(state, parameters))
     elseif method == "result.window"
@@ -341,6 +358,9 @@ function _hello_reply(state::ServiceState)
             "control_frame_bytes" => state.configuration.limits.max_control_frame_bytes,
             "binary_frame_bytes" => state.configuration.limits.max_binary_frame_bytes,
             "pending_requests" => state.configuration.limits.max_pending_requests,
+            "inspector_sections" => state.configuration.limits.max_inspector_sections,
+            "inspector_fields" => state.configuration.limits.max_inspector_fields,
+            "inspector_edits" => state.configuration.limits.max_inspector_edits,
         ),
     )
 end
