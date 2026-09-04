@@ -1,0 +1,22 @@
+format_version="1.0"
+id="passive.shunt_capacitor"
+name="Shunt capacitor"
+asset_class="passive"
+units="grid"
+bounds=["-10","-10","10","10"]
+rotations=[0,90,180,270]
+accessibility="Shunt capacitor element"
+provenance="AIMORA original"
+license="PolyForm-Noncommercial-1.0.0"
+default_state="normal"
+ports=[{id="bus",role="electrical",position=["0","10"],direction=90},{id="return",role="electrical",position=["0","-10"],direction=270}]
+anchors=[{id="placement",role="placement",position=["0","0"]},{id="label",role="label",position=["7","0"]}]
+[styles.primary]
+stroke="#1b2630"
+stroke_width="1.2"
+fill="none"
+text_role="symbol"
+[states.normal.detail]
+primitives=[{type="line",from=["0","10"],to=["0","2"],style="primary"},{type="line",from=["-6","2"],to=["6","2"],style="primary"},{type="line",from=["-6","-2"],to=["6","-2"],style="primary"},{type="line",from=["0","-2"],to=["0","-10"],style="primary"}]
+[states.normal.compact]
+primitives=[{type="polyline",points=[["0","8"],["0","2"],["-5","2"],["5","2"]],style="primary"},{type="line",from=["-5","-2"],to=["5","-2"],style="primary"}]

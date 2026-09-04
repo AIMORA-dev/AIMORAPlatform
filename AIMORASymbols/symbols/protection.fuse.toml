@@ -1,0 +1,22 @@
+format_version="1.0"
+id="protection.fuse"
+name="Fuse"
+asset_class="protection"
+units="grid"
+bounds=["-10","-10","10","10"]
+rotations=[0,90,180,270]
+accessibility="Overcurrent protection fuse"
+provenance="AIMORA original"
+license="PolyForm-Noncommercial-1.0.0"
+default_state="normal"
+ports=[{id="incoming",role="electrical",position=["-10","0"],direction=180},{id="outgoing",role="electrical",position=["10","0"],direction=0}]
+anchors=[{id="placement",role="placement",position=["0","0"]},{id="label",role="label",position=["0","7"]}]
+[styles.primary]
+stroke="#1b2630"
+stroke_width="1"
+fill="none"
+text_role="symbol"
+[states.normal.detail]
+primitives=[{type="line",from=["-10","0"],to=["-6","0"],style="primary"},{type="polygon",points=[["-6","-3"],["6","-3"],["6","3"],["-6","3"]],style="primary"},{type="line",from=["-4","0"],to=["4","0"],style="primary"},{type="line",from=["6","0"],to=["10","0"],style="primary"}]
+[states.normal.compact]
+primitives=[{type="polygon",points=[["-6","-2"],["6","-2"],["6","2"],["-6","2"]],style="primary"}]

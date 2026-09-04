@@ -1,0 +1,22 @@
+format_version="1.0"
+id="load.static"
+name="Static load"
+asset_class="load"
+units="grid"
+bounds=["-10","-10","10","10"]
+rotations=[0,90,180,270]
+accessibility="Static electrical load"
+provenance="AIMORA original"
+license="PolyForm-Noncommercial-1.0.0"
+default_state="normal"
+ports=[{id="supply",role="electrical",position=["0","10"],direction=90}]
+anchors=[{id="placement",role="placement",position=["0","0"]},{id="label",role="label",position=["8","0"]}]
+[styles.primary]
+stroke="#1b2630"
+stroke_width="1"
+fill="none"
+text_role="symbol"
+[states.normal.detail]
+primitives=[{type="line",from=["0","10"],to=["0","6"],style="primary"},{type="polygon",points=[["-6","6"],["6","6"],["3","-8"],["-3","-8"]],style="primary"}]
+[states.normal.compact]
+primitives=[{type="polygon",points=[["-5","5"],["5","5"],["0","-7"]],style="primary"}]

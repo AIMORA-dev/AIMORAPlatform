@@ -1,4 +1,14 @@
-schema = "aimora-symbol-profile-v1"
-profile_id = "aimora"
-display_name = "AIMORA"
-symbol_ids = []
+format_version = "1.0"
+id = "aimora"
+name = "AIMORA baseline electrical"
+version = "0.1.0"
+library = "aimora-public-symbols"
+search_fields = ["id", "name", "asset_class", "accessibility"]
+collections = ["system", "user", "project"]
+symbols = [
+  "converter.ac_dc", "load.static", "machine.induction_motor", "machine.synchronous_generator",
+  "measurement.current_transformer", "measurement.voltage_transformer", "network.cable", "network.overhead_line",
+  "passive.shunt_capacitor", "passive.shunt_reactor", "power.busbar", "power.ground", "power.source", "power.terminal",
+  "protection.fuse", "protection.surge_arrester", "storage.battery", "switching.circuit_breaker",
+  "switching.disconnector", "transformer.two_winding",
+]

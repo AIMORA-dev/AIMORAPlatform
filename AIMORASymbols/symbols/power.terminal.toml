@@ -1,0 +1,22 @@
+format_version="1.0"
+id="power.terminal"
+name="Terminal"
+asset_class="power"
+units="grid"
+bounds=["-10","-10","10","10"]
+rotations=[0,90,180,270]
+accessibility="Electrical connection terminal"
+provenance="AIMORA original"
+license="PolyForm-Noncommercial-1.0.0"
+default_state="normal"
+ports=[{id="connection",role="electrical",position=["0","0"],direction=0}]
+anchors=[{id="placement",role="placement",position=["0","0"]},{id="label",role="label",position=["0","6"]}]
+[styles.primary]
+stroke="#1b2630"
+stroke_width="1"
+fill="none"
+text_role="symbol"
+[states.normal.detail]
+primitives=[{type="circle",center=["0","0"],radius="3",style="primary"},{type="line",from=["3","0"],to=["10","0"],style="primary"}]
+[states.normal.compact]
+primitives=[{type="circle",center=["0","0"],radius="2",style="primary"}]

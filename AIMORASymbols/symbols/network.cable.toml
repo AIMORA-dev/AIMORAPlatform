@@ -1,0 +1,22 @@
+format_version="1.0"
+id="network.cable"
+name="Underground cable"
+asset_class="network"
+units="grid"
+bounds=["-10","-10","10","10"]
+rotations=[0,90,180,270]
+accessibility="Underground electrical cable section"
+provenance="AIMORA original"
+license="PolyForm-Noncommercial-1.0.0"
+default_state="normal"
+ports=[{id="from",role="electrical",position=["-10","0"],direction=180},{id="to",role="electrical",position=["10","0"],direction=0}]
+anchors=[{id="placement",role="placement",position=["0","0"]},{id="label",role="label",position=["0","7"]}]
+[styles.primary]
+stroke="#1b2630"
+stroke_width="1"
+fill="none"
+text_role="symbol"
+[states.normal.detail]
+primitives=[{type="line",from=["-10","0"],to=["10","0"],style="primary"},{type="circle",center=["-4","0"],radius="2",style="primary"},{type="circle",center=["0","0"],radius="2",style="primary"},{type="circle",center=["4","0"],radius="2",style="primary"}]
+[states.normal.compact]
+primitives=[{type="polyline",points=[["-10","0"],["0","-2"],["10","0"]],style="primary"}]

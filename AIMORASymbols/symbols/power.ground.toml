@@ -1,0 +1,22 @@
+format_version="1.0"
+id="power.ground"
+name="Protective ground"
+asset_class="power"
+units="grid"
+bounds=["-10","-10","10","10"]
+rotations=[0,90,180,270]
+accessibility="Protective earth ground connection"
+provenance="AIMORA original"
+license="PolyForm-Noncommercial-1.0.0"
+default_state="normal"
+ports=[{id="connection",role="electrical",position=["0","10"],direction=90}]
+anchors=[{id="placement",role="placement",position=["0","0"]},{id="label",role="label",position=["7","0"]}]
+[styles.primary]
+stroke="#1b2630"
+stroke_width="1"
+fill="none"
+text_role="symbol"
+[states.normal.detail]
+primitives=[{type="line",from=["0","10"],to=["0","2"],style="primary"},{type="polyline",points=[["-7","2"],["7","2"]],style="primary"},{type="line",from=["-5","-1"],to=["5","-1"],style="primary"},{type="line",from=["-2","-4"],to=["2","-4"],style="primary"}]
+[states.normal.compact]
+primitives=[{type="polyline",points=[["0","10"],["0","0"],["-5","0"],["5","0"]],style="primary"}]

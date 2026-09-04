@@ -1,0 +1,26 @@
+format_version="1.0"
+id="switching.disconnector"
+name="Disconnector"
+asset_class="switching"
+units="grid"
+bounds=["-10","-10","10","10"]
+rotations=[0,90,180,270]
+accessibility="Visible-isolation disconnector"
+provenance="AIMORA original"
+license="PolyForm-Noncommercial-1.0.0"
+default_state="open"
+ports=[{id="incoming",role="electrical",position=["-10","0"],direction=180},{id="outgoing",role="electrical",position=["10","0"],direction=0}]
+anchors=[{id="placement",role="placement",position=["0","0"]},{id="label",role="label",position=["0","7"]}]
+[styles.primary]
+stroke="#1b2630"
+stroke_width="1"
+fill="none"
+text_role="symbol"
+[states.open.detail]
+primitives=[{type="circle",center=["-6","0"],radius="1",style="primary"},{type="circle",center=["6","0"],radius="1",style="primary"},{type="line",from=["-5","0"],to=["5","5"],style="primary"}]
+[states.open.compact]
+primitives=[{type="line",from=["-8","0"],to=["7","4"],style="primary"}]
+[states.closed.detail]
+primitives=[{type="circle",center=["-6","0"],radius="1",style="primary"},{type="circle",center=["6","0"],radius="1",style="primary"},{type="line",from=["-5","0"],to=["5","0"],style="primary"}]
+[states.closed.compact]
+primitives=[{type="line",from=["-8","0"],to=["8","0"],style="primary"}]

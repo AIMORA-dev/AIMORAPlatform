@@ -1,7 +1,7 @@
-# Contributing
+# Contributing symbols
 
-Contributions must provide original or redistributable SVG artwork, semantic port anchors, profile metadata, provenance, and tests.
+Contributions must be original artwork expressed in the canonical primitive TOML grammar. Do not trace proprietary libraries, import vendor artwork, or submit SVG as canonical source.
 
-## Contribution licence
+Each symbol requires a stable domain ID, exact bounds and coordinates, semantic ports, snap and label anchors, supported rotations, accessible text, styles, deterministic state/LOD variants, `AIMORA original` provenance, and `PolyForm-Noncommercial-1.0.0` licensing. Add both source and canonical-content SHA-256 values to `metadata/library.toml` and include the ID in the profile.
 
-By submitting a contribution, you certify that you have the right to provide it and agree that you retain your copyright while granting Ahmed Elkholy a perpetual, worldwide, irrevocable, nonexclusive, royalty-free right to use, reproduce, modify, distribute, sublicense, and offer the contribution under this repository's PolyForm Noncommercial terms and under separately negotiated commercial agreements. Clearly identified third-party material is accepted only with compatible written redistribution and commercial-use rights; submitting it does not override its original licence.
+Tests must prove parsing, bounds, fallback behavior, all compile targets, target geometry equivalence, deterministic hashing, malformed-input rejection, and rights metadata.

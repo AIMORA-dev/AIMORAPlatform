@@ -1,6 +1,105 @@
-schema = "aimora-symbol-library-v1"
+format_version = "1.0"
 library_id = "aimora-public-symbols"
-version = "0.1.0"
 licence = "PolyForm-Noncommercial-1.0.0"
-semantic_port_metadata_required = true
-artwork_provenance_required = true
+version = "0.1.0"
+
+[[symbols]]
+content_sha256 = "7a2796bb7d7af88c8511c5a3174e50f39f314069435874cb907d6403d45c774c"
+id = "converter.ac_dc"
+path = "symbols/converter.ac_dc.toml"
+source_sha256 = "9943cc1a86b326781b30a5af4fde03f1af393ba34a75f7fa5a9c030697aa588c"
+[[symbols]]
+content_sha256 = "0b4b0fb49d89a53804550a4cb880236b38a10325e8a444f3f0576cbe4ebc9c46"
+id = "load.static"
+path = "symbols/load.static.toml"
+source_sha256 = "54187a38821e500b315648d06cc103a49edc8524fc42b8f8492f84b73e50e9a9"
+[[symbols]]
+content_sha256 = "3821c39830907b2a45f72dd2058b933402aa48174aecf2f41006393009cdea67"
+id = "machine.induction_motor"
+path = "symbols/machine.induction_motor.toml"
+source_sha256 = "bb4a68b9d11cfec8291b351d9bb0db62a48c005d5264490385abec0a13be3a45"
+[[symbols]]
+content_sha256 = "0871f02efdb862076dd9be2f77f0edf14d6131e4efb97b6aa1cb0b291d0b5570"
+id = "machine.synchronous_generator"
+path = "symbols/machine.synchronous_generator.toml"
+source_sha256 = "adcf6e8113ab9e532392ed77fe76a3a423c21847a717fea7024ee4c11747896a"
+[[symbols]]
+content_sha256 = "5f38798d20d056c15afacc7d733b5af4a54b7fc6c3bd70db6ba6ec37b63107d5"
+id = "measurement.current_transformer"
+path = "symbols/measurement.current_transformer.toml"
+source_sha256 = "b08c71c7056191b1f59e1a49d63f4080353eeecd9fc53af99eba0f5d31aa8e7d"
+[[symbols]]
+content_sha256 = "d1731dec5f0b10c9fe46f892eceea3767b738b8040b1be72a7ad30b40180ac95"
+id = "measurement.voltage_transformer"
+path = "symbols/measurement.voltage_transformer.toml"
+source_sha256 = "860fa3e15479582e791c798ed4bbaea25fdb842f0d78fc887ce199be9abd0dc9"
+[[symbols]]
+content_sha256 = "b4ca962ac9f1938076c0117f2e1a24943b2fb935afd6fcb9a83360b21dfddf99"
+id = "network.cable"
+path = "symbols/network.cable.toml"
+source_sha256 = "b93742402e1813833ee0dfc964d30cc71dff89a4812af2351ca979873cae94c7"
+[[symbols]]
+content_sha256 = "1ccda81db2dee2a3fc4efbf5d69215656ff65e77dcc57b28c0554490ed170a64"
+id = "network.overhead_line"
+path = "symbols/network.overhead_line.toml"
+source_sha256 = "9b3906b1ef84770b5285b47fa2b3108d7dbfacbbc4ad0b11a866ac434d45ee21"
+[[symbols]]
+content_sha256 = "2cf79322eee251365af206e12bae3527c7cf7761d5caff4320a2b390a7a7ebf1"
+id = "passive.shunt_capacitor"
+path = "symbols/passive.shunt_capacitor.toml"
+source_sha256 = "cc4a5f3047a52d649b9903ac017b3869318e4db3aed5dd9ff2c0c8a98f4c891c"
+[[symbols]]
+content_sha256 = "73b120960ee37a61f5affc3fb7b9702e8735ea66e4ce13ecca6f1ec669921c55"
+id = "passive.shunt_reactor"
+path = "symbols/passive.shunt_reactor.toml"
+source_sha256 = "dc63dcce9c7f312cecb75e708ff285e3e49c14a780c57cb8878a4e4deb7a4a85"
+[[symbols]]
+content_sha256 = "192ab890bbfb0c67c41f08dab8e7b8ca3373a116573b98a8d378870c79a213e6"
+id = "power.busbar"
+path = "symbols/power.busbar.toml"
+source_sha256 = "78cba96ebf4db99c408664893816008cff1d2825511911765efa3355ceaee92a"
+[[symbols]]
+content_sha256 = "c0b95f4ec79eb15827eec350baef6dc3ee241464f1f7b056da0674f3b49154b0"
+id = "power.ground"
+path = "symbols/power.ground.toml"
+source_sha256 = "8446ded7f7e47c28aca5ab0f412a7f093899acc341778acebb1cfa809ac8ae40"
+[[symbols]]
+content_sha256 = "3ece056ddc51a1a51f7c9cf714b538b5817d7654b7d770fb39b9cad50f440ac4"
+id = "power.source"
+path = "symbols/power.source.toml"
+source_sha256 = "383e080fae09e89792748e8b8643ba20fde23fad6c7dc46e5cd05fa2c3bd59b3"
+[[symbols]]
+content_sha256 = "5c65dd517134979d4a593465baa6f8b56378c63f2c41dbe6f8c359efaaee7bb3"
+id = "power.terminal"
+path = "symbols/power.terminal.toml"
+source_sha256 = "81dfd06954adce9b158ece5f524e98aa0c6daf3191165b46cc974f795bd80400"
+[[symbols]]
+content_sha256 = "7f0b411ba421e868ece6d437106f60a3aad3ccba22e4704ca7c351ade5ccfbc6"
+id = "protection.fuse"
+path = "symbols/protection.fuse.toml"
+source_sha256 = "5d50f7318fdb864e24e0a52723660ed6504c734de57c81133b8468a1acbf8060"
+[[symbols]]
+content_sha256 = "0aec18230146ab866797af63edd468b3c6ae69ad7529e78fa2984096d05194d5"
+id = "protection.surge_arrester"
+path = "symbols/protection.surge_arrester.toml"
+source_sha256 = "afce0dc5835c712b6f73215a1a82e1412a2128e66ed139e4932d3ba3bebff4fb"
+[[symbols]]
+content_sha256 = "0ab7e265c966f1324a26a5f3572fbefa8bd0f3531dd9cfee75b72c4c003e1b63"
+id = "storage.battery"
+path = "symbols/storage.battery.toml"
+source_sha256 = "4ff5ea5012595364ef0c45805a0825a2ddde1402d02970eb1dd82dc1a8ab27ea"
+[[symbols]]
+content_sha256 = "f1c7ea8326930fc9ab90f1c92470bde7e90737ea2a7f3954cc8f0151078842d8"
+id = "switching.circuit_breaker"
+path = "symbols/switching.circuit_breaker.toml"
+source_sha256 = "f1217b8fc47515e3dc71676e3177c277da9b760f59ccb395de34e2b8b578560f"
+[[symbols]]
+content_sha256 = "0cef21569b67b044e928a7fdfb327e8b401670250e476ec3206e7c8b1bfb2303"
+id = "switching.disconnector"
+path = "symbols/switching.disconnector.toml"
+source_sha256 = "027fedaa56a71380af5425684f4c9b26082f42c5eaf006d3cd1e3424adcc8702"
+[[symbols]]
+content_sha256 = "d194ded22c53647033bf236493c41908e554ae404ecf09784233225c59f49552"
+id = "transformer.two_winding"
+path = "symbols/transformer.two_winding.toml"
+source_sha256 = "084628b8f9491a3df601c1020eae30a258c4868466e425e3f1a07e55ae1a83dd"

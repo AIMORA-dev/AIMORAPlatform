@@ -1,0 +1,22 @@
+format_version="1.0"
+id="protection.surge_arrester"
+name="Surge arrester"
+asset_class="protection"
+units="grid"
+bounds=["-10","-10","10","10"]
+rotations=[0,90,180,270]
+accessibility="Overvoltage surge arrester"
+provenance="AIMORA original"
+license="PolyForm-Noncommercial-1.0.0"
+default_state="normal"
+ports=[{id="line",role="electrical",position=["0","10"],direction=90},{id="ground",role="electrical",position=["0","-10"],direction=270}]
+anchors=[{id="placement",role="placement",position=["0","0"]},{id="label",role="label",position=["8","0"]}]
+[styles.primary]
+stroke="#1b2630"
+stroke_width="1"
+fill="none"
+text_role="symbol"
+[states.normal.detail]
+primitives=[{type="line",from=["0","10"],to=["0","7"],style="primary"},{type="polygon",points=[["-5","7"],["4","7"],["-3","0"],["4","0"],["-5","-7"],["0","-7"]],style="primary"},{type="line",from=["0","-7"],to=["0","-10"],style="primary"}]
+[states.normal.compact]
+primitives=[{type="polyline",points=[["0","8"],["-3","3"],["3","-2"],["0","-8"]],style="primary"}]

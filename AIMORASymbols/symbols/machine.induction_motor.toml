@@ -1,0 +1,22 @@
+format_version="1.0"
+id="machine.induction_motor"
+name="Induction motor"
+asset_class="machine"
+units="grid"
+bounds=["-10","-10","10","10"]
+rotations=[0,90,180,270]
+accessibility="Induction electrical motor"
+provenance="AIMORA original"
+license="PolyForm-Noncommercial-1.0.0"
+default_state="normal"
+ports=[{id="terminal",role="electrical",position=["-10","0"],direction=180},{id="shaft",role="mechanical",position=["10","0"],direction=0}]
+anchors=[{id="placement",role="placement",position=["0","0"]},{id="label",role="label",position=["0","9"]}]
+[styles.primary]
+stroke="#1b2630"
+stroke_width="1"
+fill="none"
+text_role="symbol"
+[states.normal.detail]
+primitives=[{type="circle",center=["0","0"],radius="8",style="primary"},{type="ellipse",center=["0","0"],radius_x="4",radius_y="6",style="primary"},{type="line",from=["-10","0"],to=["-8","0"],style="primary"},{type="line",from=["8","0"],to=["10","0"],style="primary"}]
+[states.normal.compact]
+primitives=[{type="circle",center=["0","0"],radius="7",style="primary"}]

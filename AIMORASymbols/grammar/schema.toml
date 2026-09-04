@@ -1,0 +1,16 @@
+format_version = "1.0"
+canonical_encoding = "UTF-8 TOML"
+coordinate_encoding = "integer or decimal string"
+primitive_types = ["line", "polyline", "arc", "circle", "ellipse", "polygon"]
+compile_targets = ["retained_scene", "reference_geometry", "pdf_vector", "dxf_block"]
+required_metadata = ["id", "name", "asset_class", "units", "bounds", "rotations", "accessibility", "provenance", "license"]
+required_semantics = ["ports", "anchors", "states", "levels_of_detail", "styles"]
+prohibited_canonical_formats = ["SVG"]
+
+[limits]
+maximum_source_bytes = 256000
+maximum_primitives_per_variant = 128
+
+[rights]
+license = "PolyForm-Noncommercial-1.0.0"
+provenance = "AIMORA original"

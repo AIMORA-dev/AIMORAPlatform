@@ -1,0 +1,22 @@
+format_version="1.0"
+id="converter.ac_dc"
+name="AC/DC converter"
+asset_class="converter"
+units="grid"
+bounds=["-10","-10","10","10"]
+rotations=[0,90,180,270]
+accessibility="Alternating-current to direct-current converter"
+provenance="AIMORA original"
+license="PolyForm-Noncommercial-1.0.0"
+default_state="normal"
+ports=[{id="ac",role="electrical_ac",position=["-10","0"],direction=180},{id="dc",role="electrical_dc",position=["10","0"],direction=0}]
+anchors=[{id="placement",role="placement",position=["0","0"]},{id="label",role="label",position=["0","9"]}]
+[styles.primary]
+stroke="#1b2630"
+stroke_width="1"
+fill="none"
+text_role="symbol"
+[states.normal.detail]
+primitives=[{type="polygon",points=[["-8","-7"],["8","-7"],["8","7"],["-8","7"]],style="primary"},{type="line",from=["-7","-6"],to=["7","6"],style="primary"},{type="arc",center=["-4","1"],radius="2",start=180,sweep=180,style="primary"},{type="line",from=["2","2"],to=["6","2"],style="primary"},{type="line",from=["2","-2"],to=["6","-2"],style="primary"}]
+[states.normal.compact]
+primitives=[{type="polygon",points=[["-7","-6"],["7","-6"],["7","6"],[-7,"6"]],style="primary"},{type="line",from=["-6","-5"],to=["6","5"],style="primary"}]

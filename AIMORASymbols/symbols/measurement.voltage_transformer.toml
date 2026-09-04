@@ -1,0 +1,22 @@
+format_version="1.0"
+id="measurement.voltage_transformer"
+name="Voltage transformer"
+asset_class="measurement"
+units="grid"
+bounds=["-10","-10","10","10"]
+rotations=[0,90,180,270]
+accessibility="Voltage measurement transformer"
+provenance="AIMORA original"
+license="PolyForm-Noncommercial-1.0.0"
+default_state="normal"
+ports=[{id="primary",role="electrical",position=["0","10"],direction=90},{id="secondary",role="measurement",position=["0","-10"],direction=270}]
+anchors=[{id="placement",role="placement",position=["0","0"]},{id="label",role="label",position=["8","0"]}]
+[styles.primary]
+stroke="#1b2630"
+stroke_width="1"
+fill="none"
+text_role="symbol"
+[states.normal.detail]
+primitives=[{type="ellipse",center=["0","3"],radius_x="4",radius_y="5",style="primary"},{type="ellipse",center=["0","-3"],radius_x="4",radius_y="5",style="primary"},{type="line",from=["0","8"],to=["0","10"],style="primary"},{type="line",from=["0","-8"],to=["0","-10"],style="primary"}]
+[states.normal.compact]
+primitives=[{type="ellipse",center=["0","0"],radius_x="4",radius_y="7",style="primary"}]

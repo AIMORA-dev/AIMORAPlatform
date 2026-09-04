@@ -1,0 +1,22 @@
+format_version="1.0"
+id="passive.shunt_reactor"
+name="Shunt reactor"
+asset_class="passive"
+units="grid"
+bounds=["-10","-10","10","10"]
+rotations=[0,90,180,270]
+accessibility="Shunt reactor element"
+provenance="AIMORA original"
+license="PolyForm-Noncommercial-1.0.0"
+default_state="normal"
+ports=[{id="bus",role="electrical",position=["0","10"],direction=90},{id="return",role="electrical",position=["0","-10"],direction=270}]
+anchors=[{id="placement",role="placement",position=["0","0"]},{id="label",role="label",position=["8","0"]}]
+[styles.primary]
+stroke="#1b2630"
+stroke_width="1"
+fill="none"
+text_role="symbol"
+[states.normal.detail]
+primitives=[{type="line",from=["0","10"],to=["0","8"],style="primary"},{type="arc",center=["0","6"],radius="2",start=90,sweep=180,style="primary"},{type="arc",center=["0","2"],radius="2",start=90,sweep=180,style="primary"},{type="arc",center=["0","-2"],radius="2",start=90,sweep=180,style="primary"},{type="arc",center=["0","-6"],radius="2",start=90,sweep=180,style="primary"},{type="line",from=["0","-8"],to=["0","-10"],style="primary"}]
+[states.normal.compact]
+primitives=[{type="polyline",points=[["0","8"],["-2","4"],["2","0"],["-2","-4"],["0","-8"]],style="primary"}]

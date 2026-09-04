@@ -1,0 +1,23 @@
+format_version="1.0"
+id="power.busbar"
+name="Busbar"
+asset_class="power"
+units="grid"
+bounds=["-10","-10","10","10"]
+rotations=[0,90,180,270]
+accessibility="Electrical busbar with four connection points"
+provenance="AIMORA original"
+license="PolyForm-Noncommercial-1.0.0"
+default_state="normal"
+ports=[{id="left",role="electrical",position=["-10","0"],direction=180},{id="right",role="electrical",position=["10","0"],direction=0},{id="top",role="electrical",position=["0","10"],direction=90},{id="bottom",role="electrical",position=["0","-10"],direction=270}]
+anchors=[{id="placement",role="placement",position=["0","0"]},{id="label",role="label",position=["0","6"]}]
+[styles.primary]
+stroke="#1b2630"
+stroke_width="1.5"
+fill="none"
+text_role="symbol"
+[states.normal.detail]
+clip=["-10","-10","10","10"]
+primitives=[{type="line",from=["-10","0"],to=["10","0"],style="primary"},{type="line",from=["0","-10"],to=["0","10"],style="primary"}]
+[states.normal.compact]
+primitives=[{type="line",from=["-10","0"],to=["10","0"],style="primary"}]
