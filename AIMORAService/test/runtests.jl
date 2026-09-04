@@ -9,4 +9,7 @@ include("worker_supervision.jl")
 @info "AIMORAService inspector test phase" phase = "schema-transaction-history"
 include("inspector_transactions.jl")
 
+@info "AIMORAService semantic edit test phase" phase = "stable-identity-transaction"
+include("semantic_editing.jl")
+
 @info "AIMORAService GUI040 test phase" phase = "complete"

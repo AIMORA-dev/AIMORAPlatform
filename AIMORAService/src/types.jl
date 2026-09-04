@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-const PROTOCOL_VERSION = "1.1"
-const SERVICE_VERSION = "0.2.0"
+const PROTOCOL_VERSION = "1.2"
+const SERVICE_VERSION = "0.3.0"
 const FRAME_MAGIC = UInt8[0x41, 0x4d, 0x52, 0x31]
 const FRAME_HEADER_BYTES = 12
 
@@ -12,6 +12,7 @@ const CAPABILITIES = String[
     "project.reference",
     "inspector.schema",
     "inspector.transaction",
+    "semantic.transaction",
     "artifact.reference",
     "result.binary-window",
     "request.cancel",
@@ -36,6 +37,9 @@ Base.@kwdef struct ServiceLimits
     max_inspector_fields::Int = 4096
     max_inspector_edits::Int = 4096
     max_inspector_table_rows::Int = 100_000
+    max_semantic_ids::Int = 4096
+    max_semantic_points::Int = 100_000
+    max_semantic_attributes::Int = 256
 end
 
 function isvalid(limits::ServiceLimits)
@@ -50,7 +54,10 @@ function isvalid(limits::ServiceLimits)
            0 < limits.max_inspector_sections <= 256 &&
            0 < limits.max_inspector_fields <= 65_536 &&
            0 < limits.max_inspector_edits <= limits.max_inspector_fields &&
-           0 < limits.max_inspector_table_rows <= 1_000_000
+           0 < limits.max_inspector_table_rows <= 1_000_000 &&
+           0 < limits.max_semantic_ids <= 65_536 &&
+           0 < limits.max_semantic_points <= 1_000_000 &&
+           0 < limits.max_semantic_attributes <= 4096
 end
 
 struct ServiceError <: Exception

@@ -1,7 +1,7 @@
 {
   "schema": "aimora.service.protocol.v1",
-  "protocol_version": "1.1",
-  "service_version": "0.2.0",
+  "protocol_version": "1.2",
+  "service_version": "0.3.0",
   "frame": {
     "magic": "AMR1",
     "header_bytes": 12,
@@ -21,7 +21,10 @@
     "inspector_sections": 64,
     "inspector_fields": 4096,
     "inspector_edits": 4096,
-    "inspector_table_rows": 100000
+    "inspector_table_rows": 100000,
+    "semantic_ids": 4096,
+    "semantic_points": 100000,
+    "semantic_attributes": 256
   },
   "methods": [
     {
@@ -91,6 +94,12 @@
       "response": "control"
     },
     {
+      "id": "semantic.commit",
+      "cpp_name": "SemanticCommit",
+      "capability": "semantic.transaction",
+      "response": "control"
+    },
+    {
       "id": "artifact.open",
       "cpp_name": "ArtifactOpen",
       "capability": "artifact.reference",
@@ -145,6 +154,8 @@
     "INSPECTOR_SCHEMA_UNAVAILABLE",
     "INSPECTOR_VALIDATION_REJECTED",
     "REVISION_CONFLICT",
+    "SEMANTIC_EDIT_UNAVAILABLE",
+    "SEMANTIC_EDIT_REJECTED",
     "INTERNAL_ERROR"
   ]
 }

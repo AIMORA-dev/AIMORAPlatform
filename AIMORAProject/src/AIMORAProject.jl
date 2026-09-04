@@ -742,6 +742,16 @@ export ProjectImportApplication,
     ProjectImportResult,
     ProjectLoadResult
 
+export SemanticSldEditPlan,
+    apply_semantic_sld_edit!,
+    plan_conductor_route_edit,
+    plan_cross_reference_label,
+    plan_equipment_placement,
+    plan_physical_asset_deletion,
+    plan_projection_edit,
+    plan_projection_removal,
+    plan_typed_conductor
+
 include("identities.jl")
 include("quantities.jl")
 include("provenance.jl")
@@ -783,6 +793,7 @@ include("study_readiness.jl")
 include("dependency_analysis.jl")
 include("layered_validation.jl")
 include("transactions.jl")
+include("semantic_sld_editing.jl")
 include("builders_queries.jl")
 include("table_views.jl")
 include("format_integration.jl")

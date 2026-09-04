@@ -14,6 +14,7 @@ include("framing.jl")
 include("security.jl")
 include("workers.jl")
 include("inspection.jl")
+include("semantic_editing.jl")
 include("server.jl")
 include("cli.jl")
 include("generator.jl")
@@ -29,6 +30,7 @@ export BINARY_FRAME,
        Frame,
        FrameKind,
        InspectionProvider,
+       SemanticEditProvider,
        PathPolicy,
        ServiceConfiguration,
        ServiceError,
@@ -43,10 +45,12 @@ export BINARY_FRAME,
        encode_frame,
        generate_cpp_bindings,
        register_inspection_provider!,
+       register_semantic_edit_provider!,
        read_frame,
        run_cli,
        serve,
        unregister_inspection_provider!,
+       unregister_semantic_edit_provider!,
        write_frame
 
 end

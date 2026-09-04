@@ -28,6 +28,8 @@ QString methodName(Method method) {
         return QStringLiteral("inspector.undo");
     case Method::InspectorRedo:
         return QStringLiteral("inspector.redo");
+    case Method::SemanticCommit:
+        return QStringLiteral("semantic.commit");
     case Method::ArtifactOpen:
         return QStringLiteral("artifact.open");
     case Method::ResultWindow:
@@ -77,6 +79,9 @@ std::optional<Method> parseMethod(QStringView value) {
     }
     if(value == QStringView{u"inspector.redo"}) {
         return Method::InspectorRedo;
+    }
+    if(value == QStringView{u"semantic.commit"}) {
+        return Method::SemanticCommit;
     }
     if(value == QStringView{u"artifact.open"}) {
         return Method::ArtifactOpen;
