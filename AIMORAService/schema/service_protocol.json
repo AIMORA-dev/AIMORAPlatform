@@ -1,7 +1,7 @@
 {
   "schema": "aimora.service.protocol.v1",
-  "protocol_version": "1.2",
-  "service_version": "0.3.0",
+  "protocol_version": "1.3",
+  "service_version": "0.4.0",
   "frame": {
     "magic": "AMR1",
     "header_bytes": 12,
@@ -27,6 +27,12 @@
     "semantic_attributes": 256
   },
   "methods": [
+    {
+      "id": "project.create",
+      "cpp_name": "ProjectCreate",
+      "capability": "project.create",
+      "response": "control"
+    },
     {
       "id": "service.hello",
       "cpp_name": "ServiceHello",
@@ -61,6 +67,12 @@
       "id": "project.describe",
       "cpp_name": "ProjectDescribe",
       "capability": "project.reference",
+      "response": "control"
+    },
+    {
+      "id": "project.save",
+      "cpp_name": "ProjectSave",
+      "capability": "project.save",
       "response": "control"
     },
     {
@@ -137,6 +149,8 @@
     }
   ],
   "error_codes": [
+    "PROJECT_ALREADY_EXISTS",
+    "PROJECT_CREATE_FAILED",
     "AUTHENTICATION_REQUIRED",
     "AUTHENTICATION_FAILED",
     "PROTOCOL_VERSION_UNSUPPORTED",

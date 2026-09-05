@@ -5,6 +5,8 @@ module AIMORAService
 import Base: isvalid
 
 using JSON3
+import AIMORAProject
+using Dates
 using SHA
 using Sockets
 using UUIDs
@@ -12,10 +14,13 @@ using UUIDs
 include("types.jl")
 include("framing.jl")
 include("security.jl")
+include("new_project_paths.jl")
 include("workers.jl")
 include("inspection.jl")
 include("semantic_editing.jl")
 include("server.jl")
+include("drafting_session.jl")
+include("project_creation.jl")
 include("cli.jl")
 include("generator.jl")
 

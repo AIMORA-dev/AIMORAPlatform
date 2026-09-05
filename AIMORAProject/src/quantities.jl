@@ -41,6 +41,9 @@ Base.:(==)(left::ExactDecimal, right::ExactDecimal) =
     left.exponent == right.exponent &&
     left.negative_zero == right.negative_zero
 
+Base.hash(value::ExactDecimal, seed::UInt) =
+    hash((value.coefficient, value.exponent, value.negative_zero), seed)
+
 function Base.string(value::ExactDecimal)
     prefix = value.negative_zero ? "-" : ""
     return string(prefix, value.coefficient, 'e', value.exponent)

@@ -841,6 +841,11 @@ function project_format_node(project::CanonicalProject)
         "this compact project profile cannot silently discard graph, asset, hierarchy, control, event, or orchestration sections",
     )
     metadata = project.metadata
+    drawing_entries = isempty(drawing_workspace_ids(project.drawings)) ? Pair[] : [
+        "drawings" => AIMORAFormats.NativeDrawingDocument(
+            metadata.identity.id.value, _drawing_workspace_data(project.drawings),
+        ).drawing,
+    ]
     project_node = _format_mapping(
         "identity" => _object_identity_node(metadata.identity),
         "name" => _format_string(metadata.name),
@@ -859,11 +864,12 @@ function project_format_node(project::CanonicalProject)
         "schemas" => _format_sequence(AIMORAFormats.FormatNode[_schema_node(item) for item in project.registry.schemas]),
         "units" => _format_sequence(AIMORAFormats.FormatNode[_unit_node(item) for item in project.units.units]),
         "records" => _format_sequence(AIMORAFormats.FormatNode[_record_node(item) for item in project.records]),
+        drawing_entries...,
     )
 end
 
 function _project_from_format_node(root::AIMORAFormats.FormatNode)
-    values = _mapping(root, ["format", "project", "namespaces", "schemas", "units", "records"])
+    values = _mapping(root, ["format", "project", "namespaces", "schemas", "units", "records"], ["drawings"])
     format_values = _mapping(values["format"], ["name", "version"])
     _string(format_values["name"]) == "aimora-project" || _project_format_fail(
         :unknown_project_format,
@@ -893,7 +899,13 @@ function _project_from_format_node(root::AIMORAFormats.FormatNode)
     )
     units = UnitRegistry(UnitDefinition[_unit(item) for item in _sequence(values["units"])])
     records = CanonicalRecord[_record(item) for item in _sequence(values["records"])]
-    return CanonicalProject(metadata, registry, units, records)
+    project = CanonicalProject(metadata, registry, units, records)
+    if haskey(values, "drawings")
+        document = AIMORAFormats.NativeDrawingDocument(metadata.identity.id.value, values["drawings"])
+        workspace = _parse_drawing_workspace(AIMORAFormats.native_drawing_payload(document))
+        project = _replace_project_drawings(project, workspace)
+    end
+    return project
 end
 
 """Decode and semantically validate one resolved format node without executing project data."""
@@ -963,7 +975,8 @@ function normalize_project(path::AbstractString; policy::AIMORAFormats.ProjectRe
     return AIMORAFormats.serialize_canonical_json(project_format_node(opened.value.project); policy = policy.format_policy)
 end
 
-function _write_project_bytes(path::String, bytes::Vector{UInt8}; overwrite::Bool)
+function _write_project_bytes(path::String, bytes::Vector{UInt8}; overwrite::Bool,
+    expected_source::Union{Nothing,ContentDigest} = nothing)
     ispath(path) && !overwrite && _semantic_fail(:project_output_exists, "project output already exists")
     directory = dirname(path)
     isdir(directory) || mkpath(directory)
@@ -972,7 +985,15 @@ function _write_project_bytes(path::String, bytes::Vector{UInt8}; overwrite::Boo
         write(stream, bytes)
         flush(stream)
         close(stream)
-        mv(temporary, path; force = overwrite)
+        if !isnothing(expected_source)
+            isfile(path) && bytes2hex(open(SHA.sha256, path)) == expected_source.sha256 ||
+                _semantic_fail(:project_source_conflict, "project source changed before save")
+        end
+        if overwrite
+            Base.Filesystem.rename(temporary, path)
+        else
+            mv(temporary, path; force = false)
+        end
     catch
         isopen(stream) && close(stream)
         isfile(temporary) && Base.Filesystem.unlink(temporary)
@@ -986,6 +1007,7 @@ function save_project(
     path::AbstractString,
     project::CanonicalProject;
     overwrite::Bool = false,
+    expected_source::Union{Nothing,ContentDigest} = nothing,
     policy::AIMORAFormats.FormatInputPolicy = AIMORAFormats.FormatInputPolicy(),
 )
     node = project_format_node(project)
@@ -993,7 +1015,7 @@ function save_project(
     AIMORAFormats.format_succeeded(serialized) || return serialized
     requested = abspath(String(path))
     destination = endswith(lowercase(requested), ".aimora.yaml") ? requested : joinpath(requested, "project.aimora.yaml")
-    _write_project_bytes(destination, collect(serialized.value.bytes); overwrite)
+    _write_project_bytes(destination, collect(serialized.value.bytes); overwrite, expected_source)
     return serialized
 end
 
@@ -1006,7 +1028,8 @@ function _same_project_foundation(left::CanonicalProject, right::CanonicalProjec
         left.registry == right.registry && left.units == right.units &&
         left.graphs == right.graphs && left.asset_library == right.asset_library &&
         left.hierarchy == right.hierarchy && left.control_system == right.control_system &&
-        left.event_scenarios == right.event_scenarios && left.orchestration == right.orchestration
+        left.event_scenarios == right.event_scenarios && left.orchestration == right.orchestration &&
+        left.drawings == right.drawings
 end
 
 """Convert a project document into deterministic commands against one exact accepted base."""

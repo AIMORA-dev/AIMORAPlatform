@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 Base.@kwdef struct SemanticEditProvider
     commit::Function
+    describe::Union{Nothing,Function} = nothing
+    save::Union{Nothing,Function} = nothing
 end
 
 function register_semantic_edit_provider!(
@@ -65,7 +67,7 @@ function _required_display_points(state, parameters::AbstractDict)
     for value in values
         value isa AbstractVector && length(value) == 2 ||
             throw(ServiceError("INVALID_REQUEST", "Each display point must contain x and y."))
-        all(coordinate -> coordinate isa Real && isfinite(Float64(coordinate)), value) ||
+        all(coordinate -> coordinate isa Real && !(coordinate isa Bool) && isfinite(Float64(coordinate)), value) ||
             throw(ServiceError("INVALID_REQUEST", "Display point coordinates must be finite numbers."))
         push!(points, Any[Float64(value[1]), Float64(value[2])])
     end
@@ -102,6 +104,32 @@ const _SEMANTIC_EDIT_OPERATIONS = Set([
     "layout.full",
     "layout.local",
     "layout.incremental",
+    "draw.line",
+    "draw.polyline",
+    "draw.rectangle",
+    "draw.text",
+    "draw.circle",
+    "draw.arc",
+    "draw.ellipse",
+    "modify.mirror_horizontal",
+    "modify.mirror_vertical",
+    "modify.rotate_quarter",
+    "modify.align_anchor_x",
+    "modify.text",
+    "modify.explode_paths",
+    "modify.join_lines",
+    "layer.create",
+    "layer.update",
+    "modify.layer",
+    "modify.align_anchor_y",
+    "modify.distribute_anchor_x",
+    "modify.distribute_anchor_y",
+    "edit.undo",
+    "edit.redo",
+    "modify.move",
+    "modify.copy",
+    "modify.scale",
+    "modify.erase",
 ])
 
 function _bounded_semantic_edit_result(state, result)
@@ -127,7 +155,7 @@ function _commit_semantic_edit(state, parameters::AbstractDict)
     operation = _required_string(parameters, "operation"; maximum_bytes = 64)
     operation in _SEMANTIC_EDIT_OPERATIONS ||
         throw(ServiceError("INVALID_REQUEST", "The semantic-edit operation is unsupported."))
-    whole_view_layout = operation in ("layout.initial", "layout.full")
+    whole_view_layout = operation in ("layout.initial", "layout.full", "draw.line", "draw.polyline", "draw.rectangle", "draw.text", "draw.circle", "draw.arc", "draw.ellipse", "edit.undo", "edit.redo", "layer.create", "layer.update")
     request = Dict{String,Any}(
         "project_id" => project_id,
         "base_revision" => _required_semantic_revision(parameters),

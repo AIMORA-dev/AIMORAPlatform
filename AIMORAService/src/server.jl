@@ -160,6 +160,8 @@ function _artifact_descriptor(record::ArtifactRecord)
 end
 
 function _open_project!(state::ServiceState, parameters::AbstractDict)
+    mode = get(parameters, "mode", "reference")
+    mode in ("reference", "drafting") || throw(ServiceError("INVALID_REQUEST", "Unknown project open mode."))
     requested_path = _required_string(
         parameters,
         "path";
@@ -174,8 +176,15 @@ function _open_project!(state::ServiceState, parameters::AbstractDict)
        length(state.projects) >= state.configuration.limits.max_pending_requests
         throw(ServiceError("RESOURCE_TOO_LARGE", "Too many project references are open."))
     end
+    previously_open = haskey(state.projects, project_id)
     state.projects[project_id] = record
-    return _project_descriptor(record)
+    try
+        return mode == "drafting" ? _open_drafting_session!(state, record, parameters) :
+            _describe_project(state, Dict("project_id" => project_id))
+    catch
+        previously_open || delete!(state.projects, project_id)
+        rethrow()
+    end
 end
 
 function _describe_project(state::ServiceState, parameters::AbstractDict)
@@ -183,7 +192,19 @@ function _describe_project(state::ServiceState, parameters::AbstractDict)
     record = get(state.projects, project_id, nothing)
     record === nothing &&
         throw(ServiceError("RESOURCE_NOT_FOUND", "The requested project is not open."))
+    provider = get(state.semantic_edit_providers, project_id, nothing)
+    if !isnothing(provider) && !isnothing(provider.describe)
+        return merge(_project_descriptor(record), provider.describe())
+    end
     return _project_descriptor(record)
+end
+
+function _save_project!(state::ServiceState, parameters::AbstractDict)
+    all(key -> key in ("project_id", "base_revision"), keys(parameters)) ||
+        throw(ServiceError("INVALID_REQUEST", "Save accepts only the open project identity and revision."))
+    _, provider = _semantic_edit_provider(state, parameters)
+    isnothing(provider.save) && throw(ServiceError("SEMANTIC_EDIT_UNAVAILABLE", "This project has no save provider."))
+    return provider.save(parameters)
 end
 
 function _close_project!(state::ServiceState, parameters::AbstractDict)
@@ -325,8 +346,12 @@ function dispatch_request!(
         )
     elseif method == "project.open"
         return ServiceReply(result = _open_project!(state, parameters))
+    elseif method == "project.create"
+        return ServiceReply(result = _create_drawing_project!(state, parameters))
     elseif method == "project.describe"
         return ServiceReply(result = _describe_project(state, parameters))
+    elseif method == "project.save"
+        return ServiceReply(result = _save_project!(state, parameters))
     elseif method == "project.close"
         return ServiceReply(result = _close_project!(state, parameters))
     elseif method == "inspector.describe"
@@ -463,13 +488,19 @@ function _remove_stale_endpoint(endpoint::AbstractString)
     return nothing
 end
 
+function _local_listener_endpoint(endpoint::AbstractString; windows::Bool = Sys.iswindows())
+    windows || return String(endpoint)
+    prefix = "\\\\.\\pipe\\"
+    return startswith(endpoint, prefix) ? String(endpoint) : prefix * endpoint
+end
+
 function serve(configuration::ServiceConfiguration; ready_io::IO = stdout)
     isvalid(configuration) ||
         throw(ServiceError("INVALID_REQUEST", "The service configuration is invalid."))
     state = ServiceState(configuration)
     _remove_stale_endpoint(configuration.endpoint)
     listener = try
-        Sockets.listen(configuration.endpoint)
+        Sockets.listen(_local_listener_endpoint(configuration.endpoint))
     catch
         throw(ServiceError("INTERNAL_ERROR", "The local service endpoint could not be opened."))
     end

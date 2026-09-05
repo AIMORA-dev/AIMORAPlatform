@@ -50,6 +50,8 @@ end
 Base.:(==)(left::DrawingCoordinate, right::DrawingCoordinate) =
     left.x == right.x && left.y == right.y
 
+Base.hash(value::DrawingCoordinate, seed::UInt) = hash((value.x, value.y), seed)
+
 const DrawingStyleValue = Union{Bool,ExactDecimal,ProjectId,String}
 
 """One deterministic, typed style property."""

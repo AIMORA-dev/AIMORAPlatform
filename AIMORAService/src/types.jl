@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-const PROTOCOL_VERSION = "1.2"
-const SERVICE_VERSION = "0.3.0"
+const PROTOCOL_VERSION = "1.3"
+const SERVICE_VERSION = "0.4.0"
 const FRAME_MAGIC = UInt8[0x41, 0x4d, 0x52, 0x31]
 const FRAME_HEADER_BYTES = 12
 
@@ -10,6 +10,8 @@ const CAPABILITIES = String[
     "service.ping",
     "service.shutdown",
     "project.reference",
+    "project.save",
+    "project.create",
     "inspector.schema",
     "inspector.transaction",
     "semantic.transaction",

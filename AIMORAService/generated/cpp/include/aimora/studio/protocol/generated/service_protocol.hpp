@@ -11,13 +11,13 @@
 namespace aimora::studio::protocol::generated {
 
 inline constexpr std::string_view protocolVersion{
-    "1.2"
+    "1.3"
 };
 inline constexpr std::string_view serviceVersion{
-    "0.3.0"
+    "0.4.0"
 };
 inline constexpr std::string_view schemaSha256{
-    "56a1d3fb974581692dfb490408db39cc02ee2ff9aaef139e0334f2484c6cff36"
+    "c94c6eb57bf6ae27a523827537aa4e8ff2d9123a656a86ffe41485f99cb41c21"
 };
 inline constexpr std::string_view frameMagic{
     "AMR1"
@@ -33,6 +33,7 @@ enum class Method {
     ServiceShutdown,
     ProjectOpen,
     ProjectDescribe,
+    ProjectSave,
     ProjectClose,
     InspectorDescribe,
     InspectorCommit,
@@ -50,11 +51,12 @@ enum class Method {
 [[nodiscard]] QString methodName(Method method);
 [[nodiscard]] std::optional<Method> parseMethod(QStringView value);
 
-inline constexpr std::array<std::string_view, 12> capabilities{
+inline constexpr std::array<std::string_view, 13> capabilities{
     "artifact.reference",
     "inspector.schema",
     "inspector.transaction",
     "project.reference",
+    "project.save",
     "request.cancel",
     "result.binary-window",
     "semantic.transaction",
