@@ -1,0 +1,119 @@
+{
+  "schema": "aimora.service.protocol.v1",
+  "protocol_version": "1.0",
+  "service_version": "0.1.0",
+  "frame": {
+    "magic": "AMR1",
+    "header_bytes": 12,
+    "control_kind": 1,
+    "binary_kind": 2,
+    "byte_order": "big-endian"
+  },
+  "limits": {
+    "control_frame_bytes": 1048576,
+    "binary_frame_bytes": 67108864,
+    "pending_requests": 128,
+    "path_bytes": 4096,
+    "project_bytes": 67108864,
+    "artifact_bytes": 268435456,
+    "window_bytes": 16777216,
+    "workers": 2
+  },
+  "methods": [
+    {
+      "id": "service.hello",
+      "cpp_name": "ServiceHello",
+      "capability": "service.handshake",
+      "response": "control"
+    },
+    {
+      "id": "service.capabilities",
+      "cpp_name": "ServiceCapabilities",
+      "capability": "service.capabilities",
+      "response": "control"
+    },
+    {
+      "id": "service.ping",
+      "cpp_name": "ServicePing",
+      "capability": "service.ping",
+      "response": "control"
+    },
+    {
+      "id": "service.shutdown",
+      "cpp_name": "ServiceShutdown",
+      "capability": "service.shutdown",
+      "response": "control"
+    },
+    {
+      "id": "project.open",
+      "cpp_name": "ProjectOpen",
+      "capability": "project.reference",
+      "response": "control"
+    },
+    {
+      "id": "project.describe",
+      "cpp_name": "ProjectDescribe",
+      "capability": "project.reference",
+      "response": "control"
+    },
+    {
+      "id": "project.close",
+      "cpp_name": "ProjectClose",
+      "capability": "project.reference",
+      "response": "control"
+    },
+    {
+      "id": "artifact.open",
+      "cpp_name": "ArtifactOpen",
+      "capability": "artifact.reference",
+      "response": "control"
+    },
+    {
+      "id": "result.window",
+      "cpp_name": "ResultWindow",
+      "capability": "result.binary-window",
+      "response": "control+binary"
+    },
+    {
+      "id": "request.cancel",
+      "cpp_name": "RequestCancel",
+      "capability": "request.cancel",
+      "response": "control"
+    },
+    {
+      "id": "worker.start",
+      "cpp_name": "WorkerStart",
+      "capability": "worker.lifecycle",
+      "response": "control"
+    },
+    {
+      "id": "worker.status",
+      "cpp_name": "WorkerStatus",
+      "capability": "worker.lifecycle",
+      "response": "control"
+    },
+    {
+      "id": "worker.stop",
+      "cpp_name": "WorkerStop",
+      "capability": "worker.lifecycle",
+      "response": "control"
+    }
+  ],
+  "error_codes": [
+    "AUTHENTICATION_REQUIRED",
+    "AUTHENTICATION_FAILED",
+    "PROTOCOL_VERSION_UNSUPPORTED",
+    "INVALID_REQUEST",
+    "METHOD_NOT_FOUND",
+    "FRAME_INVALID",
+    "FRAME_TOO_LARGE",
+    "PATH_NOT_ALLOWED",
+    "RESOURCE_NOT_FOUND",
+    "RESOURCE_TOO_LARGE",
+    "REQUEST_CANCELLED",
+    "WORKER_UNAVAILABLE",
+    "WORKER_LIMIT_REACHED",
+    "WORKER_NOT_FOUND",
+    "INTERNAL_ERROR"
+  ]
+}
